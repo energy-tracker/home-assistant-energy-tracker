@@ -50,17 +50,17 @@ You need the device ID to send meter readings. There are two ways to get it:
 #### Option B: Via API (Recommended)
 
 1. Log into your Energy Tracker account
-2. Navigate to **API** → **Dokumentation**
+2. Navigate to **API** → **Documentation**
 3. Use the API endpoint to retrieve your devices
 4. The IDs returned are already in the correct format (without `std-` prefix)
 
 ## Usage
 
-### Service: `energy_tracker.send_meter_reading`
+### Action `energy_tracker.send_meter_reading`
 
 Send a meter reading from a Home Assistant sensor to Energy Tracker.
 
-#### Service Parameters
+#### Action Parameters
 
 | Parameter | Required | Type | Description |
 |-----------|----------|------|-------------|
@@ -74,18 +74,17 @@ Send a meter reading from a Home Assistant sensor to Energy Tracker.
 Send your electricity meter reading daily at 23:55:
 
 ```yaml
-automation:
-  - alias: "Send Daily Electricity Reading"
-    trigger:
-      - platform: time
-        at: "23:55:00"
-    action:
-      - service: energy_tracker.send_meter_reading
-        data:
-          entry_id: <select from dropdown>
-          device_id: "deadbeef-dead-beef-dead-beefdeadbeef"
-          source_entity_id: <select from dropdown>
-          allow_rounding: true
+- alias: "Send daily electricity reading"
+  triggers:
+    - trigger: time
+      at: "23:55:00"
+  actions:
+    - action: energy_tracker.send_meter_reading
+      data:
+        entry_id: <select from dropdown>
+        device_id: "deadbeef-dead-beef-dead-beefdeadbeef"
+        source_entity_id: <select from dropdown>
+        allow_rounding: true
 ```
 
 Use the visual automation editor to automatically select your account and sensor from dropdowns.
@@ -132,9 +131,8 @@ A: Verify the device ID is correct. It should be a UUID format like `deadbeef-de
 A: Add a condition to check entity state before sending:
 
 ```yaml
-condition:
-  - condition: template
-    value_template: "{{ states('sensor.electricity_meter') not in ['unavailable', 'unknown'] }}"
+conditions:
+  - "{{ states('sensor.electricity_meter') not in ['unavailable', 'unknown'] }}"
 ```
 
 **Q: Integration shows authentication error after setup**  
