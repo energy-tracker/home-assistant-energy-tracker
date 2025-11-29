@@ -1,0 +1,4 @@
+# Quality scale definition for Energy Tracker integration
+# https://developers.home-assistant.io/docs/integration_quality_scale_index/
+
+integration_type: service
