@@ -1,4 +1,4 @@
-homeassistant>=2024.12.0
+homeassistant>=2024.3.0
 energy-tracker-api>=1.0.0,<2.0.0
 pytest
 pytest-asyncio

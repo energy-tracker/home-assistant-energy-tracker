@@ -59,7 +59,10 @@ jobs:
           
           # Copy component files
           mkdir -p core-fork/homeassistant/components/energy_tracker
-          cp -r custom_components/energy_tracker/. core-fork/homeassistant/components/energy_tracker/
+          cp -r custom_components/energy_tracker/* core-fork/homeassistant/components/energy_tracker/
+          # Copy translations files
+          mkdir -p core-fork/homeassistant/components/energy_tracker/translations
+          cp -r custom_components/energy_tracker/translations/* core-fork/homeassistant/components/energy_tracker/translations/
 
       - name: Sync test files
         run: |
