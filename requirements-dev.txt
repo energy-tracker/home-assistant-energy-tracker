@@ -1,4 +1,5 @@
 homeassistant
+energy-tracker-api>=1.0.0,<2.0.0
 pytest
 pytest-asyncio
 pytest-cov
