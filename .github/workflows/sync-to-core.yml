@@ -101,6 +101,8 @@ jobs:
       - name: Create commit
         working-directory: core-fork
         run: |
+          # Force add translations directory to ensure it's not ignored
+          git add -f homeassistant/components/energy_tracker/translations/
           git add -A
           
           # Check if there are changes to commit
