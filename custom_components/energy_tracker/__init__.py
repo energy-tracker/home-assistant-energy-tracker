@@ -12,7 +12,6 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import dt as dt_util
 
 from .api import EnergyTrackerApi
 from .const import CONF_API_TOKEN, DOMAIN, SERVICE_SEND_METER_READING
