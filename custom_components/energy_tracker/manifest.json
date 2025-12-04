@@ -5,7 +5,7 @@
   "documentation": "https://github.com/energy-tracker/home-assistant-energy-tracker",
   "issue_tracker": "https://github.com/energy-tracker/home-assistant-energy-tracker/issues",
   "requirements": [
-    "energy-tracker-api>=1.0.0,<2.0.0"
+    "energy-tracker-api==1.0.0"
   ],
   "dependencies": [],
   "codeowners": [
