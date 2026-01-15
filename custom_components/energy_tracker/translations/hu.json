@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "A személyes hozzáférési token nem lehet üres."
-    },
     "abort": {
       "already_configured": "Ez a személyes hozzáférési token már konfigurálva van. Minden token csak egyszer használható.",
-      "entry_not_found": "A konfigurációs bejegyzés nem található.",
       "reconfigure_successful": "A konfiguráció sikeresen frissítve."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
       "title": "Az Energy Tracker hitelesítése sikertelen",
-      "description": "A konfigurált személyes hozzáférési token érvénytelen vagy lejárt. Hozzon létre új tokent az Energy Tracker-fiókjában, és frissítse a tokent az integráció beállításaiban."
+      "description": "A beállított személyes hozzáférési token érvénytelen vagy lejárt. Ez megakadályozza, hogy az integráció mérőállásokat küldjön az Energy Trackernek.\n\nA probléma megoldásához:\n1. Jelentkezzen be az Energy Tracker fiókjába\n2. Navigáljon a Beállítások > Hozzáférési tokenek menüpontra\n3. Vonja vissza a régi tokent, ha még szerepel a listában\n4. Kattintson az 'Új token létrehozása' gombra és másolja ki\n5. A Home Assistantban lépjen a Beállítások > Eszközök és szolgáltatások menüpontra\n6. Keresse meg az Energy Trackert és kattintson a 'Konfigurálás' gombra\n7. Illessze be az új tokent és mentse\n\nEzen lépések elvégzése után az integráció automatikusan újracsatlakozik."
     },
     "auth_error_insufficient_permissions": {
-      "title": "Elégtelen engedélyek az Energy Trackerhez",
-      "description": "A konfigurált személyes hozzáférési token nem rendelkezik a szükséges engedélyekkel. Hozzon létre új tokent a szükséges engedélyekkel az Energy Tracker-fiókjában, és frissítse a tokent ennek az integrációnak a beállításaiban."
+      "title": "Elégtelen jogosultságok az Energy Trackerhez",
+      "description": "A beállított személyes hozzáférési token nem rendelkezik a mérőállások beküldéséhez szükséges jogosultságokkal.\n\nA probléma megoldásához:\n1. Jelentkezzen be az Energy Tracker fiókjába\n2. Navigáljon a Beállítások > Hozzáférési tokenek menüpontra\n3. Ellenőrizze a jelenlegi token jogosultságait\n4. Ha a jogosultságok nem módosíthatók, hozzon létre új tokent 'Írás' hozzáféréssel a mérőállásokhoz\n5. A Home Assistantban lépjen a Beállítások > Eszközök és szolgáltatások menüpontra\n6. Keresse meg az Energy Trackert és kattintson a 'Konfigurálás' gombra\n7. Illessze be az új tokent és mentse\n\nEzen lépések elvégzése után az integráció rendelkezni fog a szükséges jogosultságokkal."
     }
   },
   "exceptions": {

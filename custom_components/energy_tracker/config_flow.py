@@ -10,6 +10,18 @@ import voluptuous as vol
 
 from .const import CONF_API_TOKEN, DOMAIN
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_TOKEN): vol.All(str, vol.Strip, vol.Length(min=1)),
+    }
+)
+
+STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_API_TOKEN): vol.All(str, vol.Strip, vol.Length(min=1)),
+    }
+)
+
 
 class EnergyTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Config flow handler for the Energy Tracker integration.
@@ -25,33 +37,20 @@ class EnergyTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             token = user_input[CONF_API_TOKEN].strip()
 
-            if not token:
-                errors["api_token"] = "empty_token"
+            await self.async_set_unique_id(token)
+            self._abort_if_unique_id_configured()
 
-            if not errors:
-                await self.async_set_unique_id(token)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title="Energy Tracker Account",
-                    data={CONF_API_TOKEN: token},
-                )
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_API_TOKEN): str,
-            }
-        )
+            return self.async_create_entry(
+                title=f"Energy Tracker (...{token[-4:]})",
+                data={CONF_API_TOKEN: token},
+            )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=data_schema,
-            errors=errors,
+            data_schema=STEP_USER_DATA_SCHEMA,
         )
 
     async def async_step_reconfigure(
@@ -59,11 +58,7 @@ class EnergyTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
         user_input: dict[str, Any] | None = None,
     ) -> FlowResult:
         """Handle reconfiguration of the integration."""
-        errors: dict[str, str] = {}
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
-        if entry is None:
-            return self.async_abort(reason="entry_not_found")
+        entry = self._get_reconfigure_entry()
 
         if user_input is not None:
             new_token_input = user_input.get(CONF_API_TOKEN)
@@ -73,31 +68,18 @@ class EnergyTrackerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type
                 else entry.data[CONF_API_TOKEN]
             )
 
-            if new_token_input is not None and not new_token:
-                errors["api_token"] = "empty_token"
+            if new_token != entry.data[CONF_API_TOKEN]:
+                await self.async_set_unique_id(new_token)
+                self._abort_if_unique_id_configured()
+                self.hass.config_entries.async_update_entry(entry, unique_id=new_token)
 
-            if not errors:
-                if new_token != entry.data[CONF_API_TOKEN]:
-                    await self.async_set_unique_id(new_token)
-                    self._abort_if_unique_id_configured()
-                    self.hass.config_entries.async_update_entry(
-                        entry, unique_id=new_token
-                    )
-
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data={CONF_API_TOKEN: new_token},
-                    reason="reconfigure_successful",
-                )
-
-        data_schema = vol.Schema(
-            {
-                vol.Optional(CONF_API_TOKEN): str,
-            }
-        )
+            return self.async_update_reload_and_abort(
+                entry,
+                data={CONF_API_TOKEN: new_token},
+                reason="reconfigure_successful",
+            )
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=data_schema,
-            errors=errors,
+            data_schema=STEP_RECONFIGURE_DATA_SCHEMA,
         )

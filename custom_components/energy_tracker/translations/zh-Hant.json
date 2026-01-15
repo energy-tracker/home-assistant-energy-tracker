@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "個人存取權杖不能為空白。"
-    },
     "abort": {
       "already_configured": "此個人存取權杖已設定。每個權杖只能使用一次。",
-      "entry_not_found": "找不到設定項目。",
       "reconfigure_successful": "設定已成功更新。"
     }
   },
   "issues": {
     "auth_error_invalid_token": {
-      "title": "Energy Tracker 身分驗證失敗",
-      "description": "設定的個人存取權杖無效或已過期。請在您的 Energy Tracker 帳號中建立新權杖,並在整合設定中更新權杖。"
+      "title": "Energy Tracker 驗證失敗",
+      "description": "設定的個人存取權杖無效或已過期。這將阻止整合向 Energy Tracker 傳送電表讀數。\n\n要解決此問題：\n1. 登入您的 Energy Tracker 帳戶\n2. 導覽至 設定 > 存取權杖\n3. 如果舊權杖仍在列表中，請撤銷它\n4. 點擊「建立新權杖」並複製它\n5. 在 Home Assistant 中，前往 設定 > 裝置與服務\n6. 找到 Energy Tracker 並點擊「設定」\n7. 貼上新權杖並儲存\n\n完成這些步驟後，整合將自動重新連線。"
     },
     "auth_error_insufficient_permissions": {
       "title": "Energy Tracker 權限不足",
-      "description": "設定的個人存取權杖沒有所需權限。請在您的 Energy Tracker 帳號中建立具有所需權限的新權杖,並在此整合的設定中更新權杖。"
+      "description": "設定的個人存取權杖沒有提交電表讀數所需的權限。\n\n要解決此問題：\n1. 登入您的 Energy Tracker 帳戶\n2. 導覽至 設定 > 存取權杖\n3. 檢查目前權杖的權限\n4. 如果無法修改權限，請建立具有電表讀數「寫入」存取權限的新權杖\n5. 在 Home Assistant 中，前往 設定 > 裝置與服務\n6. 找到 Energy Tracker 並點擊「設定」\n7. 貼上新權杖並儲存\n\n完成這些步驟後，整合將獲得所需的權限。"
     }
   },
   "exceptions": {

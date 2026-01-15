@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "Persoonlijk toegangstoken mag niet leeg zijn."
-    },
     "abort": {
       "already_configured": "Dit persoonlijke toegangstoken is al geconfigureerd. Elk token kan slechts één keer worden gebruikt.",
-      "entry_not_found": "Configuratie-invoer niet gevonden.",
       "reconfigure_successful": "Configuratie succesvol bijgewerkt."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
       "title": "Authenticatie met Energy Tracker mislukt",
-      "description": "Het geconfigureerde persoonlijke toegangstoken is ongeldig of verlopen. Maak een nieuw token aan in je Energy Tracker-account en werk het token bij in de integratie-instellingen."
+      "description": "Het geconfigureerde persoonlijke toegangstoken is ongeldig of verlopen. Dit voorkomt dat de integratie meterstanden naar Energy Tracker stuurt.\n\nOm dit probleem op te lossen:\n1. Log in op uw Energy Tracker-account\n2. Ga naar Instellingen > Toegangstokens\n3. Trek het oude token in indien nog vermeld\n4. Klik op 'Nieuw token maken' en kopieer het\n5. Ga in Home Assistant naar Instellingen > Apparaten & diensten\n6. Zoek Energy Tracker en klik op 'Configureren'\n7. Plak het nieuwe token en sla op\n\nNa het voltooien van deze stappen maakt de integratie automatisch opnieuw verbinding."
     },
     "auth_error_insufficient_permissions": {
       "title": "Onvoldoende rechten voor Energy Tracker",
-      "description": "Het geconfigureerde persoonlijke toegangstoken heeft niet de benodigde rechten. Maak een nieuw token aan met de benodigde rechten in je Energy Tracker-account en werk het token bij in de instellingen van deze integratie."
+      "description": "Het geconfigureerde persoonlijke toegangstoken heeft niet de vereiste rechten om meterstanden in te dienen.\n\nOm dit probleem op te lossen:\n1. Log in op uw Energy Tracker-account\n2. Ga naar Instellingen > Toegangstokens\n3. Controleer de rechten van uw huidige token\n4. Als de rechten niet kunnen worden gewijzigd, maak een nieuw token aan met 'Schrijf'-toegang voor meterstanden\n5. Ga in Home Assistant naar Instellingen > Apparaten & diensten\n6. Zoek Energy Tracker en klik op 'Configureren'\n7. Plak het nieuwe token en sla op\n\nNa het voltooien van deze stappen heeft de integratie de vereiste rechten."
     }
   },
   "exceptions": {

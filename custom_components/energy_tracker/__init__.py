@@ -15,7 +15,7 @@ import voluptuous as vol
 from .api import EnergyTrackerApi
 from .const import CONF_API_TOKEN, DOMAIN, SERVICE_SEND_METER_READING
 
-type EnergyTrackerConfigEntry = ConfigEntry[str | None]
+type EnergyTrackerConfigEntry = ConfigEntry[str]
 
 LOGGER = logging.getLogger(__name__)
 
@@ -171,7 +171,7 @@ async def async_setup_entry(
     """
     LOGGER.debug("Setting up config entry %s", entry.entry_id)
 
-    entry.runtime_data = entry.data.get(CONF_API_TOKEN)
+    entry.runtime_data = entry.data[CONF_API_TOKEN]
 
     if not hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING):
 

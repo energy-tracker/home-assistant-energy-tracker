@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "Kişisel erişim jetonu boş olamaz."
-    },
     "abort": {
       "already_configured": "Bu kişisel erişim jetonu zaten yapılandırılmış. Her jeton yalnızca bir kez kullanılabilir.",
-      "entry_not_found": "Yapılandırma girdisi bulunamadı.",
       "reconfigure_successful": "Yapılandırma başarıyla güncellendi."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
-      "title": "Energy Tracker kimlik doğrulaması başarısız oldu",
-      "description": "Yapılandırılan kişisel erişim jetonu geçersiz veya süresi dolmuş. Energy Tracker hesabınızda yeni bir jeton oluşturun ve entegrasyon ayarlarında jetonu güncelleyin."
+      "title": "Energy Tracker ile kimlik doğrulama başarısız oldu",
+      "description": "Yapılandırılmış kişisel erişim belirteci geçersiz veya süresi dolmuş. Bu, entegrasyonun Energy Tracker'a sayaç okumalarını göndermesini engelliyor.\n\nBu sorunu çözmek için:\n1. Energy Tracker hesabınıza giriş yapın\n2. Ayarlar > Erişim Belirteçleri'ne gidin\n3. Hâlâ listeleniyorsa eski belirteci iptal edin\n4. 'Yeni Belirteç Oluştur'a tıklayın ve kopyalayın\n5. Home Assistant'ta Ayarlar > Cihazlar ve Hizmetler'e gidin\n6. Energy Tracker'ı bulun ve 'Yapılandır'a tıklayın\n7. Yeni belirteci yapıştırın ve kaydedin\n\nBu adımları tamamladıktan sonra entegrasyon otomatik olarak yeniden bağlanacaktır."
     },
     "auth_error_insufficient_permissions": {
       "title": "Energy Tracker için yetersiz izinler",
-      "description": "Yapılandırılan kişisel erişim jetonunun gerekli izinleri yok. Energy Tracker hesabınızda gerekli izinlere sahip yeni bir jeton oluşturun ve bu entegrasyonun ayarlarında jetonu güncelleyin."
+      "description": "Yapılandırılmış kişisel erişim belirteci sayaç okumalarını göndermek için gerekli izinlere sahip değil.\n\nBu sorunu çözmek için:\n1. Energy Tracker hesabınıza giriş yapın\n2. Ayarlar > Erişim Belirteçleri'ne gidin\n3. Mevcut belirtecinizin izinlerini kontrol edin\n4. İzinler değiştirilemiyorsa, sayaç okumaları için 'Yazma' erişimi olan yeni bir belirteç oluşturun\n5. Home Assistant'ta Ayarlar > Cihazlar ve Hizmetler'e gidin\n6. Energy Tracker'ı bulun ve 'Yapılandır'a tıklayın\n7. Yeni belirteci yapıştırın ve kaydedin\n\nBu adımları tamamladıktan sonra entegrasyon gerekli izinlere sahip olacaktır."
     }
   },
   "exceptions": {

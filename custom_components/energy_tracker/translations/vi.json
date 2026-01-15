@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "Mã thông báo truy cập cá nhân không được để trống."
-    },
     "abort": {
       "already_configured": "Mã thông báo truy cập cá nhân này đã được cấu hình. Mỗi mã thông báo chỉ có thể được sử dụng một lần.",
-      "entry_not_found": "Không tìm thấy mục cấu hình.",
       "reconfigure_successful": "Cấu hình đã được cập nhật thành công."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
       "title": "Xác thực với Energy Tracker thất bại",
-      "description": "Mã thông báo truy cập cá nhân được cấu hình không hợp lệ hoặc đã hết hạn. Tạo mã thông báo mới trong tài khoản Energy Tracker của bạn và cập nhật mã thông báo trong cài đặt tích hợp."
+      "description": "Mã thông báo truy cập cá nhân đã cấu hình không hợp lệ hoặc đã hết hạn. Điều này ngăn tích hợp gửi số đọc đồng hồ đến Energy Tracker.\n\nĐể giải quyết vấn đề này:\n1. Đăng nhập vào tài khoản Energy Tracker của bạn\n2. Điều hướng đến Cài đặt > Mã thông báo truy cập\n3. Thu hồi mã thông báo cũ nếu vẫn còn trong danh sách\n4. Nhấp vào 'Tạo mã thông báo mới' và sao chép\n5. Trong Home Assistant, đi đến Cài đặt > Thiết bị & Dịch vụ\n6. Tìm Energy Tracker và nhấp vào 'Cấu hình'\n7. Dán mã thông báo mới và lưu\n\nSau khi hoàn thành các bước này, tích hợp sẽ tự động kết nối lại."
     },
     "auth_error_insufficient_permissions": {
-      "title": "Quyền không đủ cho Energy Tracker",
-      "description": "Mã thông báo truy cập cá nhân được cấu hình không có quyền cần thiết. Tạo mã thông báo mới với các quyền cần thiết trong tài khoản Energy Tracker của bạn và cập nhật mã thông báo trong cài đặt tích hợp này."
+      "title": "Không đủ quyền cho Energy Tracker",
+      "description": "Mã thông báo truy cập cá nhân đã cấu hình không có quyền cần thiết để gửi số đọc đồng hồ.\n\nĐể giải quyết vấn đề này:\n1. Đăng nhập vào tài khoản Energy Tracker của bạn\n2. Điều hướng đến Cài đặt > Mã thông báo truy cập\n3. Kiểm tra quyền của mã thông báo hiện tại\n4. Nếu không thể sửa đổi quyền, tạo mã thông báo mới với quyền 'Ghi' cho số đọc đồng hồ\n5. Trong Home Assistant, đi đến Cài đặt > Thiết bị & Dịch vụ\n6. Tìm Energy Tracker và nhấp vào 'Cấu hình'\n7. Dán mã thông báo mới và lưu\n\nSau khi hoàn thành các bước này, tích hợp sẽ có quyền cần thiết."
     }
   },
   "exceptions": {

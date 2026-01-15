@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "Osobný prístupový token nemôže byť prázdny."
-    },
     "abort": {
       "already_configured": "Tento osobný prístupový token je už nakonfigurovaný. Každý token možno použiť iba raz.",
-      "entry_not_found": "Konfiguračný záznam nebol nájdený.",
       "reconfigure_successful": "Konfigurácia bola úspešne aktualizovaná."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
       "title": "Overenie s Energy Tracker zlyhalo",
-      "description": "Nakonfigurovaný osobný prístupový token je neplatný alebo vypršal. Vytvorte nový token vo svojom účte Energy Tracker a aktualizujte token v nastaveniach integrácie."
+      "description": "Nakonfigurovaný osobný prístupový token je neplatný alebo vypršal. To bráni integrácii odosielať odčítania meračov do Energy Tracker.\n\nRiešenie tohto problému:\n1. Prihláste sa do svojho účtu Energy Tracker\n2. Prejdite do Nastavenia > Prístupové tokeny\n3. Zrušte starý token, ak je stále uvedený\n4. Kliknite na 'Vytvoriť nový token' a skopírujte ho\n5. V Home Assistant prejdite do Nastavenia > Zariadenia a služby\n6. Nájdite Energy Tracker a kliknite na 'Konfigurovať'\n7. Vložte nový token a uložte\n\nPo dokončení týchto krokov sa integrácia automaticky znova pripojí."
     },
     "auth_error_insufficient_permissions": {
       "title": "Nedostatočné oprávnenia pre Energy Tracker",
-      "description": "Nakonfigurovaný osobný prístupový token nemá potrebné oprávnenia. Vytvorte nový token s potrebnými oprávneniami vo svojom účte Energy Tracker a aktualizujte token v nastaveniach tejto integrácie."
+      "description": "Nakonfigurovaný osobný prístupový token nemá požadované oprávnenia na odosielanie odčítaní meračov.\n\nRiešenie tohto problému:\n1. Prihláste sa do svojho účtu Energy Tracker\n2. Prejdite do Nastavenia > Prístupové tokeny\n3. Skontrolujte oprávnenia aktuálneho tokenu\n4. Ak oprávnenia nemožno zmeniť, vytvorte nový token s oprávnením 'Zápis' pre odčítania meračov\n5. V Home Assistant prejdite do Nastavenia > Zariadenia a služby\n6. Nájdite Energy Tracker a kliknite na 'Konfigurovať'\n7. Vložte nový token a uložte\n\nPo dokončení týchto krokov bude mať integrácia požadované oprávnenia."
     }
   },
   "exceptions": {

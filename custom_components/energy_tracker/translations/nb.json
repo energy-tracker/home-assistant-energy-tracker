@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "Personlig tilgangstoken kan ikke være tom."
-    },
     "abort": {
       "already_configured": "Denne personlige tilgangstokenen er allerede konfigurert. Hver token kan bare brukes én gang.",
-      "entry_not_found": "Konfigurasjonsoppføring ikke funnet.",
       "reconfigure_successful": "Konfigurasjonen ble oppdatert."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
       "title": "Autentisering med Energy Tracker mislyktes",
-      "description": "Den konfigurerte personlige tilgangstokenen er ugyldig eller utløpt. Opprett en ny token i Energy Tracker-kontoen din og oppdater tokenen i integrasjonsinnstillingene."
+      "description": "Det konfigurerte personlige tilgangstokenet er ugyldig eller utløpt. Dette forhindrer integrasjonen fra å sende måleravlesninger til Energy Tracker.\n\nFor å løse dette problemet:\n1. Logg inn på Energy Tracker-kontoen din\n2. Naviger til Innstillinger > Tilgangstokener\n3. Tilbakekall det gamle tokenet hvis det fortsatt er oppført\n4. Klikk på 'Opprett nytt token' og kopier det\n5. I Home Assistant, gå til Innstillinger > Enheter og tjenester\n6. Finn Energy Tracker og klikk på 'Konfigurer'\n7. Lim inn det nye tokenet og lagre\n\nEtter å ha fullført disse trinnene, vil integrasjonen automatisk koble til på nytt."
     },
     "auth_error_insufficient_permissions": {
       "title": "Utilstrekkelige tillatelser for Energy Tracker",
-      "description": "Den konfigurerte personlige tilgangstokenen har ikke de nødvendige tillatelsene. Opprett en ny token med de nødvendige tillatelsene i Energy Tracker-kontoen din og oppdater tokenen i denne integrasjonens innstillinger."
+      "description": "Det konfigurerte personlige tilgangstokenet har ikke de nødvendige tillatelsene for å sende inn måleravlesninger.\n\nFor å løse dette problemet:\n1. Logg inn på Energy Tracker-kontoen din\n2. Naviger til Innstillinger > Tilgangstokener\n3. Sjekk tillatelsene for ditt nåværende token\n4. Hvis tillatelser ikke kan endres, opprett et nytt token med 'Skrive'-tilgang for måleravlesninger\n5. I Home Assistant, gå til Innstillinger > Enheter og tjenester\n6. Finn Energy Tracker og klikk på 'Konfigurer'\n7. Lim inn det nye tokenet og lagre\n\nEtter å ha fullført disse trinnene, vil integrasjonen ha de nødvendige tillatelsene."
     }
   },
   "exceptions": {

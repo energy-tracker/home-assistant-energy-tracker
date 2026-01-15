@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "Henkilökohtainen käyttöoikeustunnus ei voi olla tyhjä."
-    },
     "abort": {
       "already_configured": "Tämä henkilökohtainen käyttöoikeustunnus on jo määritetty. Jokaista tunnusta voidaan käyttää vain kerran.",
-      "entry_not_found": "Kokoonpanomerkintää ei löytynyt.",
       "reconfigure_successful": "Kokoonpano on päivitetty onnistuneesti."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
       "title": "Todennus Energy Trackeriin epäonnistui",
-      "description": "Määritetty henkilökohtainen käyttöoikeustunnus on virheellinen tai vanhentunut. Luo uusi tunnus Energy Tracker -tililläsi ja päivitä tunnus integrointiasetuksissa."
+      "description": "Määritetty henkilökohtainen käyttöoikeustunnus on virheellinen tai vanhentunut. Tämä estää integraatiota lähettämästä mittarilukemia Energy Trackeriin.\n\nOngelman ratkaiseminen:\n1. Kirjaudu Energy Tracker -tilillesi\n2. Siirry kohtaan Asetukset > Käyttöoikeustunnukset\n3. Peruuta vanha tunnus, jos se on vielä luettelossa\n4. Napsauta 'Luo uusi tunnus' ja kopioi se\n5. Siirry Home Assistantissa kohtaan Asetukset > Laitteet ja palvelut\n6. Etsi Energy Tracker ja napsauta 'Määritä'\n7. Liitä uusi tunnus ja tallenna\n\nNäiden vaiheiden suorittamisen jälkeen integraatio yhdistää automaattisesti uudelleen."
     },
     "auth_error_insufficient_permissions": {
-      "title": "Riittämättömät oikeudet Energy Trackeriin",
-      "description": "Määritetyllä henkilökohtaisella käyttöoikeustunnuksella ei ole tarvittavia oikeuksia. Luo uusi tunnus tarvittavilla oikeuksilla Energy Tracker -tililläsi ja päivitä tunnus tämän integroinnin asetuksissa."
+      "title": "Riittämättömät oikeudet Energy Trackerille",
+      "description": "Määritetyllä henkilökohtaisella käyttöoikeustunnuksella ei ole tarvittavia oikeuksia mittarilukemien lähettämiseen.\n\nOngelman ratkaiseminen:\n1. Kirjaudu Energy Tracker -tilillesi\n2. Siirry kohtaan Asetukset > Käyttöoikeustunnukset\n3. Tarkista nykyisen tunnuksesi oikeudet\n4. Jos oikeuksia ei voi muuttaa, luo uusi tunnus 'Kirjoitus'-oikeuksilla mittarilukemille\n5. Siirry Home Assistantissa kohtaan Asetukset > Laitteet ja palvelut\n6. Etsi Energy Tracker ja napsauta 'Määritä'\n7. Liitä uusi tunnus ja tallenna\n\nNäiden vaiheiden suorittamisen jälkeen integraatiolla on tarvittavat oikeudet."
     }
   },
   "exceptions": {

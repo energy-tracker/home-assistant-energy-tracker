@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "Tokenul de acces personal nu poate fi gol."
-    },
     "abort": {
       "already_configured": "Acest token de acces personal este deja configurat. Fiecare token poate fi utilizat o singură dată.",
-      "entry_not_found": "Intrarea de configurație nu a fost găsită.",
       "reconfigure_successful": "Configurația a fost actualizată cu succes."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
       "title": "Autentificarea cu Energy Tracker a eșuat",
-      "description": "Tokenul de acces personal configurat este invalid sau a expirat. Creați un token nou în contul dvs. Energy Tracker și actualizați tokenul în setările integrării."
+      "description": "Tokenul de acces personal configurat este invalid sau a expirat. Aceasta împiedică integrarea să trimită citiri de contor către Energy Tracker.\n\nPentru a rezolva această problemă:\n1. Conectați-vă la contul dvs. Energy Tracker\n2. Navigați la Setări > Tokenuri de acces\n3. Revocați tokenul vechi dacă este încă listat\n4. Faceți clic pe 'Creați token nou' și copiați-l\n5. În Home Assistant, mergeți la Setări > Dispozitive și servicii\n6. Găsiți Energy Tracker și faceți clic pe 'Configurare'\n7. Lipiți noul token și salvați\n\nDupă finalizarea acestor pași, integrarea se va reconecta automat."
     },
     "auth_error_insufficient_permissions": {
       "title": "Permisiuni insuficiente pentru Energy Tracker",
-      "description": "Tokenul de acces personal configurat nu are permisiunile necesare. Creați un token nou cu permisiunile necesare în contul dvs. Energy Tracker și actualizați tokenul în setările acestei integrări."
+      "description": "Tokenul de acces personal configurat nu are permisiunile necesare pentru a trimite citiri de contor.\n\nPentru a rezolva această problemă:\n1. Conectați-vă la contul dvs. Energy Tracker\n2. Navigați la Setări > Tokenuri de acces\n3. Verificați permisiunile tokenului actual\n4. Dacă permisiunile nu pot fi modificate, creați un token nou cu acces de 'Scriere' pentru citiri de contor\n5. În Home Assistant, mergeți la Setări > Dispozitive și servicii\n6. Găsiți Energy Tracker și faceți clic pe 'Configurare'\n7. Lipiți noul token și salvați\n\nDupă finalizarea acestor pași, integrarea va avea permisiunile necesare."
     }
   },
   "exceptions": {

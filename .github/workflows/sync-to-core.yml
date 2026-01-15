@@ -124,6 +124,10 @@ jobs:
           # Remove version from manifest.json (only used for custom components, not Core)
           sed -i '/"version":/d' core-fork/homeassistant/components/energy_tracker/manifest.json
 
+          # Replace abort strings with common Home Assistant Core references
+          sed -i 's/"already_configured": "[^"]*"/"already_configured": "[%key:common::config_flow::abort::already_configured_account%]"/g' core-fork/homeassistant/components/energy_tracker/strings.json
+          sed -i 's/"reconfigure_successful": "[^"]*"/"reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"/g' core-fork/homeassistant/components/energy_tracker/strings.json
+
       - name: Generate requirements files
         working-directory: core-fork
         run: |

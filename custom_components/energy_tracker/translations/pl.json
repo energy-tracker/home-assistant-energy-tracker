@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "Osobisty token dostępu nie może być pusty."
-    },
     "abort": {
       "already_configured": "Ten osobisty token dostępu jest już skonfigurowany. Każdy token może być użyty tylko raz.",
-      "entry_not_found": "Wpis konfiguracji nie został znaleziony.",
       "reconfigure_successful": "Konfiguracja została pomyślnie zaktualizowana."
     }
   },
   "issues": {
     "auth_error_invalid_token": {
       "title": "Uwierzytelnianie z Energy Tracker nie powiodło się",
-      "description": "Skonfigurowany osobisty token dostępu jest nieprawidłowy lub wygasł. Utwórz nowy token na swoim koncie Energy Tracker i zaktualizuj token w ustawieniach integracji."
+      "description": "Skonfigurowany osobisty token dostępu jest nieprawidłowy lub wygasł. Uniemożliwia to integracji wysyłanie odczytów licznika do Energy Tracker.\n\nAby rozwiązać ten problem:\n1. Zaloguj się na swoje konto Energy Tracker\n2. Przejdź do Ustawienia > Tokeny dostępu\n3. Unieważnij stary token, jeśli nadal jest na liście\n4. Kliknij 'Utwórz nowy token' i skopiuj go\n5. W Home Assistant przejdź do Ustawienia > Urządzenia i usługi\n6. Znajdź Energy Tracker i kliknij 'Konfiguruj'\n7. Wklej nowy token i zapisz\n\nPo wykonaniu tych kroków integracja automatycznie połączy się ponownie."
     },
     "auth_error_insufficient_permissions": {
       "title": "Niewystarczające uprawnienia dla Energy Tracker",
-      "description": "Skonfigurowany osobisty token dostępu nie ma wymaganych uprawnień. Utwórz nowy token z wymaganymi uprawnieniami na swoim koncie Energy Tracker i zaktualizuj token w ustawieniach tej integracji."
+      "description": "Skonfigurowany osobisty token dostępu nie ma wymaganych uprawnień do przesyłania odczytów licznika.\n\nAby rozwiązać ten problem:\n1. Zaloguj się na swoje konto Energy Tracker\n2. Przejdź do Ustawienia > Tokeny dostępu\n3. Sprawdź uprawnienia aktualnego tokena\n4. Jeśli uprawnienia nie mogą być zmienione, utwórz nowy token z dostępem 'Zapis' dla odczytów licznika\n5. W Home Assistant przejdź do Ustawienia > Urządzenia i usługi\n6. Znajdź Energy Tracker i kliknij 'Konfiguruj'\n7. Wklej nowy token i zapisz\n\nPo wykonaniu tych kroków integracja będzie miała wymagane uprawnienia."
     }
   },
   "exceptions": {

@@ -97,6 +97,7 @@ class EnergyTrackerApi:
                 DOMAIN,
                 issue_id=f"auth_error_401_{self._token[:8]}",
                 is_fixable=False,
+                issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="auth_error_invalid_token",
             )
@@ -113,6 +114,7 @@ class EnergyTrackerApi:
                 DOMAIN,
                 issue_id=f"auth_error_403_{self._token[:8]}",
                 is_fixable=False,
+                issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="auth_error_insufficient_permissions",
             )

@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.energy_tracker.const import CONF_API_TOKEN, DOMAIN
@@ -20,7 +21,6 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {}
 
     # Act
     result2 = await hass.config_entries.flow.async_configure(
@@ -32,7 +32,7 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
 
     # Assert
     assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Energy Tracker Account"
+    assert result2["title"] == "Energy Tracker (...-123)"
     assert result2["data"] == {
         CONF_API_TOKEN: "test-token-123",
     }
@@ -45,18 +45,16 @@ async def test_user_form_empty_token(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Act
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_TOKEN: "   ",
-        },
-    )
+    # Act & Assert - Voluptuous Length(min=1) validation catches empty/whitespace tokens
+    with pytest.raises(InvalidData) as exc_info:
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_TOKEN: "   ",
+            },
+        )
 
-    # Assert
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "user"
-    assert result2["errors"] == {"api_token": "empty_token"}
+    assert "api_token" in exc_info.value.schema_errors
 
 
 async def test_user_form_duplicate_token(hass: HomeAssistant) -> None:
@@ -168,18 +166,16 @@ async def test_reconfigure_form_empty_token(hass: HomeAssistant) -> None:
         },
     )
 
-    # Act
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_API_TOKEN: "   ",
-        },
-    )
+    # Act & Assert - Voluptuous Length(min=1) validation catches empty/whitespace tokens
+    with pytest.raises(InvalidData) as exc_info:
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_TOKEN: "   ",
+            },
+        )
 
-    # Assert
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "reconfigure"
-    assert result2["errors"] == {"api_token": "empty_token"}
+    assert "api_token" in exc_info.value.schema_errors
 
 
 async def test_reconfigure_form_duplicate_token(hass: HomeAssistant) -> None:
@@ -220,22 +216,6 @@ async def test_reconfigure_form_duplicate_token(hass: HomeAssistant) -> None:
     # Assert
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
-
-
-async def test_reconfigure_form_entry_not_found(hass: HomeAssistant) -> None:
-    """Test abort when entry to reconfigure is not found."""
-    # Arrange & Act
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": "reconfigure",
-            "entry_id": "non-existent-entry-id",
-        },
-    )
-
-    # Assert
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "entry_not_found"
 
 
 async def test_reconfigure_form_input_trimming(hass: HomeAssistant) -> None:

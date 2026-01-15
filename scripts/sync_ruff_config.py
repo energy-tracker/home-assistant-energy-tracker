@@ -170,7 +170,7 @@ def add_local_overrides(content: str) -> str:
 
 
 def update_python_version_in_files(python_version: str) -> None:
-    """Update Python version in ruff.base.toml and pyproject.toml."""
+    """Update Python version in ruff.base.toml, pyproject.toml, and CI workflow."""
     project_root = Path(__file__).parent.parent
     py_version = f"py{python_version.replace('.', '')}"  # 3.13 -> py313
 
@@ -199,6 +199,19 @@ def update_python_version_in_files(python_version: str) -> None:
         if new_content != content:
             pyproject_path.write_text(new_content)
             print(f'Updated pyproject.toml: python_version = "{python_version}"')
+
+    # Update CI workflow
+    ci_path = project_root / ".github" / "workflows" / "ci.yml"
+    if ci_path.exists():
+        content = ci_path.read_text()
+        new_content = re.sub(
+            r'python-version:\s*"\d+\.\d+"',
+            f'python-version: "{python_version}"',
+            content,
+        )
+        if new_content != content:
+            ci_path.write_text(new_content)
+            print(f'Updated .github/workflows/ci.yml: python-version: "{python_version}"')
 
 
 def main() -> None:

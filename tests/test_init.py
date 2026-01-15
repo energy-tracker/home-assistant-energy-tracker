@@ -448,11 +448,14 @@ class TestAsyncHandleSendMeterReading:
         entry = MockConfigEntry(
             domain=DOMAIN,
             title="Test Account",
-            data={"name": "Test Account"},  # No token
+            data={CONF_API_TOKEN: "valid-token"},
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
         await async_setup_entry(hass, entry)
+
+        # Simulate runtime_data being empty/missing
+        entry.runtime_data = ""
 
         hass.states.async_set("sensor.energy_meter", "123.45")
 

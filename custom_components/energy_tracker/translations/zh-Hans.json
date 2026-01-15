@@ -16,23 +16,19 @@
         }
       }
     },
-    "error": {
-      "empty_token": "个人访问令牌不能为空。"
-    },
     "abort": {
       "already_configured": "此个人访问令牌已配置。每个令牌只能使用一次。",
-      "entry_not_found": "未找到配置条目。",
       "reconfigure_successful": "配置已成功更新。"
     }
   },
   "issues": {
     "auth_error_invalid_token": {
-      "title": "Energy Tracker 身份验证失败",
-      "description": "配置的个人访问令牌无效或已过期。请在您的 Energy Tracker 账户中创建新令牌,并在集成设置中更新令牌。"
+      "title": "Energy Tracker 认证失败",
+      "description": "配置的个人访问令牌无效或已过期。这将阻止集成向 Energy Tracker 发送电表读数。\n\n要解决此问题：\n1. 登录您的 Energy Tracker 账户\n2. 导航至 设置 > 访问令牌\n3. 如果旧令牌仍在列表中，请撤销它\n4. 点击「创建新令牌」并复制它\n5. 在 Home Assistant 中，转到 设置 > 设备与服务\n6. 找到 Energy Tracker 并点击「配置」\n7. 粘贴新令牌并保存\n\n完成这些步骤后，集成将自动重新连接。"
     },
     "auth_error_insufficient_permissions": {
       "title": "Energy Tracker 权限不足",
-      "description": "配置的个人访问令牌没有所需权限。请在您的 Energy Tracker 账户中创建具有所需权限的新令牌,并在此集成的设置中更新令牌。"
+      "description": "配置的个人访问令牌没有提交电表读数所需的权限。\n\n要解决此问题：\n1. 登录您的 Energy Tracker 账户\n2. 导航至 设置 > 访问令牌\n3. 检查当前令牌的权限\n4. 如果无法修改权限，请创建具有电表读数「写入」访问权限的新令牌\n5. 在 Home Assistant 中，转到 设置 > 设备与服务\n6. 找到 Energy Tracker 并点击「配置」\n7. 粘贴新令牌并保存\n\n完成这些步骤后，集成将获得所需的权限。"
     }
   },
   "exceptions": {
