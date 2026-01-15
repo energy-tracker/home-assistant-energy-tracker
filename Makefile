@@ -1,4 +1,4 @@
-.PHONY: venv install test lint
+.PHONY: venv install test lint format sync-ruff
 
 venv:
 	python3 -m venv .venv
@@ -16,10 +16,13 @@ run-ha:
 	. .venv/bin/activate && hass --config .
 
 lint:
-	. .venv/bin/activate && ruff check custom_components tests
+	. .venv/bin/activate && ruff check --config ruff.base.toml custom_components tests
 
 format:
-	. .venv/bin/activate && ruff format custom_components tests
+	. .venv/bin/activate && ruff format --config ruff.base.toml custom_components tests
 	@find custom_components/energy_tracker -name "*.json" | while read file; do \
 		python3 -c "import json,sys; d=json.load(open('$$file')); json.dump(d,open('$$file','w'),ensure_ascii=False,indent=2); print('',file=open('$$file','a'))" && echo "✅ $$file"; \
 	done
+
+sync-ruff:
+	python3 scripts/sync_ruff_config.py

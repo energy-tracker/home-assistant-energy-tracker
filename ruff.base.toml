@@ -1,0 +1,22 @@
+# Ruff configuration for energy-tracker custom component
+# This file extends ruff.core.toml (synced from HA Core)
+# Add local customizations here
+
+extend = "ruff.core.toml"
+
+# Override target Python version
+target-version = "py311"
+
+# Override source paths
+src = ["custom_components", "tests"]
+
+[lint]
+# Additional rules to ignore locally
+extend-ignore = []
+
+# Additional rules to select locally  
+extend-select = []
+
+[lint.per-file-ignores]
+# Tests may access private members for verification
+"tests/**" = ["SLF001"]
