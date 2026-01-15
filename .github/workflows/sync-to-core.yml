@@ -103,6 +103,9 @@ jobs:
           # Remove auto_enable_custom_integrations fixture from conftest.py (not needed in core)
           find core-fork/tests/components/energy_tracker -type f -name "conftest.py" -print0 | xargs -0 sed -i '/@pytest.fixture(autouse=True)/,/yield/d'
 
+          # Remove version from manifest.json (only used for custom components, not Core)
+          sed -i '/"version":/d' core-fork/homeassistant/components/energy_tracker/manifest.json
+
       - name: Generate requirements files
         working-directory: core-fork
         run: |
