@@ -31,16 +31,6 @@
       "reconfigure_successful": "Configuration updated successfully."
     }
   },
-  "issues": {
-    "auth_error_invalid_token": {
-      "title": "Authentication with Energy Tracker failed",
-      "description": "The configured personal access token is invalid or has expired. This prevents the integration from sending meter readings to Energy Tracker.\n\nTo resolve this issue:\n1. Log in to your Energy Tracker account\n2. Navigate to Settings > Access Tokens\n3. Revoke the old token if still listed\n4. Click 'Create New Token' and copy it\n5. In Home Assistant, go to Settings > Devices & Services\n6. Find Energy Tracker and click 'Configure'\n7. Paste the new token and save\n\nAfter completing these steps, the integration will reconnect automatically."
-    },
-    "auth_error_insufficient_permissions": {
-      "title": "Insufficient permissions for Energy Tracker",
-      "description": "The configured personal access token does not have the required permissions to submit meter readings.\n\nTo resolve this issue:\n1. Log in to your Energy Tracker account\n2. Navigate to Settings > Access Tokens\n3. Check the permissions of your current token\n4. If permissions cannot be modified, create a new token with 'Write' access for meter readings\n5. In Home Assistant, go to Settings > Devices & Services\n6. Find Energy Tracker and click 'Configure'\n7. Paste the new token and save\n\nAfter completing these steps, the integration will have the required permissions."
-    }
-  },
   "exceptions": {
     "timeout": {
       "message": "Request timed out. Please check network connection and try again."

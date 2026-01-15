@@ -80,17 +80,7 @@ async def async_handle_send_meter_reading(
     Raises:
         HomeAssistantError: If the meter reading could not be sent.
     """
-
-    device_id = call.data.get("device_id")
-    if device_id:
-        device_id = device_id.strip()
-    if not device_id:
-        LOGGER.error("No device_id provided or empty")
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="device_id_empty",
-        )
-
+    device_id: str = call.data["device_id"].strip()
     source_entity_id: str = call.data["source_entity_id"]
     allow_rounding: bool = call.data.get("allow_rounding", True)
 

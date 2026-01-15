@@ -31,16 +31,6 @@
       "reconfigure_successful": "Konfigurationen har uppdaterats."
     }
   },
-  "issues": {
-    "auth_error_invalid_token": {
-      "title": "Autentisering med Energy Tracker misslyckades",
-      "description": "Den konfigurerade personliga åtkomsttoken är ogiltig eller har gått ut. Detta förhindrar integrationen från att skicka mätaravläsningar till Energy Tracker.\n\nFör att lösa detta problem:\n1. Logga in på ditt Energy Tracker-konto\n2. Navigera till Inställningar > Åtkomsttoken\n3. Återkalla den gamla token om den fortfarande finns listad\n4. Klicka på 'Skapa ny token' och kopiera den\n5. I Home Assistant, gå till Inställningar > Enheter och tjänster\n6. Hitta Energy Tracker och klicka på 'Konfigurera'\n7. Klistra in den nya token och spara\n\nEfter att ha slutfört dessa steg kommer integrationen att återansluta automatiskt."
-    },
-    "auth_error_insufficient_permissions": {
-      "title": "Otillräckliga behörigheter för Energy Tracker",
-      "description": "Den konfigurerade personliga åtkomsttoken har inte de behörigheter som krävs för att skicka in mätaravläsningar.\n\nFör att lösa detta problem:\n1. Logga in på ditt Energy Tracker-konto\n2. Navigera till Inställningar > Åtkomsttoken\n3. Kontrollera behörigheterna för din nuvarande token\n4. Om behörigheter inte kan ändras, skapa en ny token med 'Skriv'-åtkomst för mätaravläsningar\n5. I Home Assistant, gå till Inställningar > Enheter och tjänster\n6. Hitta Energy Tracker och klicka på 'Konfigurera'\n7. Klistra in den nya token och spara\n\nEfter att ha slutfört dessa steg kommer integrationen att ha de behörigheter som krävs."
-    }
-  },
   "exceptions": {
     "timeout": {
       "message": "Timeout för begäran. Kontrollera nätverksanslutningen och försök igen."

@@ -223,37 +223,6 @@ class TestAsyncHandleSendMeterReading:
         assert call_kwargs["value"] == 123.45
         assert call_kwargs["allow_rounding"] is True
 
-    async def test_device_id_empty_raises_error(self, hass: HomeAssistant):
-        """Test that empty device_id raises localized error."""
-        # Arrange
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            title="Test Account",
-            data={"name": "Test Account", CONF_API_TOKEN: "test-token"},
-            entry_id="test-entry-id",
-        )
-        entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
-
-        call = create_service_call(
-            hass,
-            DOMAIN,
-            SERVICE_SEND_METER_READING,
-            {
-                "entry_id": "test-entry-id",
-                "device_id": "   ",
-                "source_entity_id": "sensor.energy_meter",
-                "allow_rounding": True,
-            },
-        )
-
-        # Act & Assert
-        with pytest.raises(HomeAssistantError) as exc_info:
-            await async_handle_send_meter_reading(hass, call)
-
-        assert exc_info.value.translation_domain == DOMAIN
-        assert exc_info.value.translation_key == "device_id_empty"
-
     async def test_entity_not_found_raises_error(self, hass: HomeAssistant):
         """Test that non-existent entity raises localized error."""
         # Arrange

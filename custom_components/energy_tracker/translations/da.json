@@ -31,16 +31,6 @@
       "reconfigure_successful": "Konfigurationen er blevet opdateret."
     }
   },
-  "issues": {
-    "auth_error_invalid_token": {
-      "title": "Godkendelse med Energy Tracker mislykkedes",
-      "description": "Det konfigurerede personlige adgangstoken er ugyldigt eller udløbet. Dette forhindrer integrationen i at sende måleraflæsninger til Energy Tracker.\n\nFor at løse dette problem:\n1. Log ind på din Energy Tracker-konto\n2. Naviger til Indstillinger > Adgangstokens\n3. Tilbagekald det gamle token, hvis det stadig er opført\n4. Klik på 'Opret nyt token' og kopier det\n5. I Home Assistant, gå til Indstillinger > Enheder og tjenester\n6. Find Energy Tracker og klik på 'Konfigurer'\n7. Indsæt det nye token og gem\n\nEfter at have gennemført disse trin, vil integrationen automatisk genoprette forbindelsen."
-    },
-    "auth_error_insufficient_permissions": {
-      "title": "Utilstrækkelige tilladelser til Energy Tracker",
-      "description": "Det konfigurerede personlige adgangstoken har ikke de nødvendige tilladelser til at indsende måleraflæsninger.\n\nFor at løse dette problem:\n1. Log ind på din Energy Tracker-konto\n2. Naviger til Indstillinger > Adgangstokens\n3. Kontroller tilladelserne for dit aktuelle token\n4. Hvis tilladelserne ikke kan ændres, opret et nyt token med 'Skrive'-adgang til måleraflæsninger\n5. I Home Assistant, gå til Indstillinger > Enheder og tjenester\n6. Find Energy Tracker og klik på 'Konfigurer'\n7. Indsæt det nye token og gem\n\nEfter at have gennemført disse trin, vil integrationen have de nødvendige tilladelser."
-    }
-  },
   "exceptions": {
     "timeout": {
       "message": "Timeout for anmodning. Kontroller netværksforbindelsen og prøv igen."

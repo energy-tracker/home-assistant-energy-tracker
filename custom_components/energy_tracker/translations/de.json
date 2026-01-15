@@ -31,16 +31,6 @@
       "reconfigure_successful": "Konfiguration erfolgreich aktualisiert."
     }
   },
-  "issues": {
-    "auth_error_invalid_token": {
-      "title": "Authentifizierung mit Energy Tracker fehlgeschlagen",
-      "description": "Der konfigurierte persönliche Zugriffstoken ist ungültig oder abgelaufen. Dies verhindert, dass die Integration Zählerstände an Energy Tracker sendet.\n\nSo beheben Sie dieses Problem:\n1. Melden Sie sich bei Ihrem Energy Tracker-Konto an\n2. Navigieren Sie zu Einstellungen > Zugriffstoken\n3. Widerrufen Sie den alten Token, falls noch aufgeführt\n4. Klicken Sie auf 'Neuen Token erstellen' und kopieren Sie ihn\n5. Gehen Sie in Home Assistant zu Einstellungen > Geräte & Dienste\n6. Suchen Sie Energy Tracker und klicken Sie auf 'Konfigurieren'\n7. Fügen Sie den neuen Token ein und speichern Sie\n\nNach Abschluss dieser Schritte verbindet sich die Integration automatisch neu."
-    },
-    "auth_error_insufficient_permissions": {
-      "title": "Unzureichende Berechtigungen für Energy Tracker",
-      "description": "Der konfigurierte persönliche Zugriffstoken hat nicht die erforderlichen Berechtigungen zum Übermitteln von Zählerständen.\n\nSo beheben Sie dieses Problem:\n1. Melden Sie sich bei Ihrem Energy Tracker-Konto an\n2. Navigieren Sie zu Einstellungen > Zugriffstoken\n3. Überprüfen Sie die Berechtigungen Ihres aktuellen Tokens\n4. Falls die Berechtigungen nicht geändert werden können, erstellen Sie einen neuen Token mit 'Schreib'-Zugriff für Zählerstände\n5. Gehen Sie in Home Assistant zu Einstellungen > Geräte & Dienste\n6. Suchen Sie Energy Tracker und klicken Sie auf 'Konfigurieren'\n7. Fügen Sie den neuen Token ein und speichern Sie\n\nNach Abschluss dieser Schritte hat die Integration die erforderlichen Berechtigungen."
-    }
-  },
   "exceptions": {
     "timeout": {
       "message": "Zeitüberschreitung bei Anfrage. Bitte Netzwerkverbindung prüfen und erneut versuchen."

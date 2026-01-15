@@ -20,7 +20,6 @@ from energy_tracker_api import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
 
@@ -65,8 +64,6 @@ class EnergyTrackerApi:
         Raises:
             HomeAssistantError: If the API request fails.
         """
-        log_prefix = f"[{source_entity_id}]"
-
         meter_reading = CreateMeterReadingDto(
             value=value,
             timestamp=timestamp,
@@ -78,11 +75,11 @@ class EnergyTrackerApi:
                 meter_reading=meter_reading,
                 allow_rounding=allow_rounding,
             )
-            LOGGER.info("%s Reading sent: %g", log_prefix, value)
+            LOGGER.info("Reading sent: %g", value)
 
         except ValidationError as err:
             # HTTP 400 - Bad Request
-            LOGGER.warning("%s %s", log_prefix, err)
+            LOGGER.warning("Validation error: %s", err)
             msg = "; ".join(err.api_message) if err.api_message else "Invalid input"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -92,16 +89,7 @@ class EnergyTrackerApi:
 
         except AuthenticationError as err:
             # HTTP 401 - Unauthorized
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                issue_id=f"auth_error_401_{self._token[:8]}",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="auth_error_invalid_token",
-            )
-            LOGGER.error("%s %s", log_prefix, err)
+            LOGGER.error("Authentication failed: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -109,16 +97,7 @@ class EnergyTrackerApi:
 
         except ForbiddenError as err:
             # HTTP 403 - Forbidden
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                issue_id=f"auth_error_403_{self._token[:8]}",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="auth_error_insufficient_permissions",
-            )
-            LOGGER.error("%s %s", log_prefix, err)
+            LOGGER.error("Access forbidden: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
@@ -126,7 +105,7 @@ class EnergyTrackerApi:
 
         except ResourceNotFoundError as err:
             # HTTP 404 - Not Found
-            LOGGER.warning("%s %s", log_prefix, err)
+            LOGGER.warning("Device not found: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_not_found",
@@ -134,7 +113,7 @@ class EnergyTrackerApi:
 
         except ConflictError as err:
             # HTTP 409 - Conflict
-            LOGGER.warning("%s %s", log_prefix, err)
+            LOGGER.warning("Conflict: %s", err)
             msg = "; ".join(err.api_message) if err.api_message else str(err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -144,7 +123,7 @@ class EnergyTrackerApi:
 
         except RateLimitError as err:
             # HTTP 429 - Rate Limit
-            LOGGER.warning("%s %s", log_prefix, err)
+            LOGGER.warning("Rate limit exceeded: %s", err)
 
             if err.retry_after:
                 raise HomeAssistantError(
@@ -159,7 +138,7 @@ class EnergyTrackerApi:
 
         except TimeoutError as err:
             # Request timeout
-            LOGGER.error("%s %s", log_prefix, err)
+            LOGGER.error("Request timeout: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="timeout",
@@ -167,7 +146,7 @@ class EnergyTrackerApi:
 
         except NetworkError as err:
             # Network/connection errors
-            LOGGER.error("%s %s", log_prefix, err)
+            LOGGER.error("Network error: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="network_error",
@@ -175,7 +154,7 @@ class EnergyTrackerApi:
 
         except EnergyTrackerAPIError as err:
             # Other API errors
-            LOGGER.error("%s %s", log_prefix, err)
+            LOGGER.error("API error: %s", err)
             msg = "; ".join(err.api_message) if err.api_message else str(err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -185,7 +164,7 @@ class EnergyTrackerApi:
 
         except Exception as err:
             # Unexpected errors
-            LOGGER.exception("%s Unexpected error", log_prefix)
+            LOGGER.exception("Unexpected error")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unknown_error",

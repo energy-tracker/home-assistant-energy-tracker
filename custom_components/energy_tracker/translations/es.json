@@ -31,16 +31,6 @@
       "reconfigure_successful": "Configuración actualizada correctamente."
     }
   },
-  "issues": {
-    "auth_error_invalid_token": {
-      "title": "Autenticación con Energy Tracker fallida",
-      "description": "El token de acceso personal configurado es inválido o ha expirado. Esto impide que la integración envíe lecturas de contador a Energy Tracker.\n\nPara resolver este problema:\n1. Inicie sesión en su cuenta de Energy Tracker\n2. Navegue a Configuración > Tokens de acceso\n3. Revoque el token antiguo si aún está listado\n4. Haga clic en 'Crear nuevo token' y cópielo\n5. En Home Assistant, vaya a Configuración > Dispositivos y servicios\n6. Encuentre Energy Tracker y haga clic en 'Configurar'\n7. Pegue el nuevo token y guarde\n\nDespués de completar estos pasos, la integración se reconectará automáticamente."
-    },
-    "auth_error_insufficient_permissions": {
-      "title": "Permisos insuficientes para Energy Tracker",
-      "description": "El token de acceso personal configurado no tiene los permisos necesarios para enviar lecturas de contador.\n\nPara resolver este problema:\n1. Inicie sesión en su cuenta de Energy Tracker\n2. Navegue a Configuración > Tokens de acceso\n3. Verifique los permisos de su token actual\n4. Si los permisos no se pueden modificar, cree un nuevo token con acceso de 'Escritura' para lecturas de contador\n5. En Home Assistant, vaya a Configuración > Dispositivos y servicios\n6. Encuentre Energy Tracker y haga clic en 'Configurar'\n7. Pegue el nuevo token y guarde\n\nDespués de completar estos pasos, la integración tendrá los permisos necesarios."
-    }
-  },
   "exceptions": {
     "timeout": {
       "message": "Tiempo de espera agotado. Por favor, verifica la conexión de red e inténtalo de nuevo."

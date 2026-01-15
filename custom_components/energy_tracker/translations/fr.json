@@ -31,16 +31,6 @@
       "reconfigure_successful": "Configuration mise à jour avec succès."
     }
   },
-  "issues": {
-    "auth_error_invalid_token": {
-      "title": "Authentification avec Energy Tracker échouée",
-      "description": "Le jeton d'accès personnel configuré est invalide ou a expiré. Cela empêche l'intégration d'envoyer des relevés de compteur à Energy Tracker.\n\nPour résoudre ce problème :\n1. Connectez-vous à votre compte Energy Tracker\n2. Accédez à Paramètres > Jetons d'accès\n3. Révoquez l'ancien jeton s'il est encore listé\n4. Cliquez sur 'Créer un nouveau jeton' et copiez-le\n5. Dans Home Assistant, allez dans Paramètres > Appareils et services\n6. Trouvez Energy Tracker et cliquez sur 'Configurer'\n7. Collez le nouveau jeton et enregistrez\n\nAprès avoir terminé ces étapes, l'intégration se reconnectera automatiquement."
-    },
-    "auth_error_insufficient_permissions": {
-      "title": "Permissions insuffisantes pour Energy Tracker",
-      "description": "Le jeton d'accès personnel configuré n'a pas les permissions requises pour soumettre des relevés de compteur.\n\nPour résoudre ce problème :\n1. Connectez-vous à votre compte Energy Tracker\n2. Accédez à Paramètres > Jetons d'accès\n3. Vérifiez les permissions de votre jeton actuel\n4. Si les permissions ne peuvent pas être modifiées, créez un nouveau jeton avec un accès 'Écriture' pour les relevés de compteur\n5. Dans Home Assistant, allez dans Paramètres > Appareils et services\n6. Trouvez Energy Tracker et cliquez sur 'Configurer'\n7. Collez le nouveau jeton et enregistrez\n\nAprès avoir terminé ces étapes, l'intégration aura les permissions requises."
-    }
-  },
   "exceptions": {
     "timeout": {
       "message": "Délai d'attente dépassé. Veuillez vérifier la connexion réseau et réessayer."

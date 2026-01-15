@@ -31,16 +31,6 @@
       "reconfigure_successful": "Konfigurace byla úspěšně aktualizována."
     }
   },
-  "issues": {
-    "auth_error_invalid_token": {
-      "title": "Ověření u Energy Tracker selhalo",
-      "description": "Nakonfigurovaný osobní přístupový token je neplatný nebo vypršel. To brání integraci v odesílání odečtů měřičů do Energy Tracker.\n\nŘešení tohoto problému:\n1. Přihlaste se ke svému účtu Energy Tracker\n2. Přejděte do Nastavení > Přístupové tokeny\n3. Odvolejte starý token, pokud je stále uveden\n4. Klikněte na 'Vytvořit nový token' a zkopírujte ho\n5. V Home Assistant přejděte do Nastavení > Zařízení a služby\n6. Najděte Energy Tracker a klikněte na 'Konfigurovat'\n7. Vložte nový token a uložte\n\nPo dokončení těchto kroků se integrace automaticky znovu připojí."
-    },
-    "auth_error_insufficient_permissions": {
-      "title": "Nedostatečná oprávnění pro Energy Tracker",
-      "description": "Nakonfigurovaný osobní přístupový token nemá požadovaná oprávnění pro odesílání odečtů měřičů.\n\nŘešení tohoto problému:\n1. Přihlaste se ke svému účtu Energy Tracker\n2. Přejděte do Nastavení > Přístupové tokeny\n3. Zkontrolujte oprávnění aktuálního tokenu\n4. Pokud nelze oprávnění změnit, vytvořte nový token s oprávněním 'Zápis' pro odečty měřičů\n5. V Home Assistant přejděte do Nastavení > Zařízení a služby\n6. Najděte Energy Tracker a klikněte na 'Konfigurovat'\n7. Vložte nový token a uložte\n\nPo dokončení těchto kroků bude mít integrace požadovaná oprávnění."
-    }
-  },
   "exceptions": {
     "timeout": {
       "message": "Časový limit požadavku. Zkontrolujte síťové připojení a zkuste to znovu."

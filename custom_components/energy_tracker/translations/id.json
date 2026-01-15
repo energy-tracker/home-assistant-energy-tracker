@@ -31,16 +31,6 @@
       "reconfigure_successful": "Konfigurasi berhasil diperbarui."
     }
   },
-  "issues": {
-    "auth_error_invalid_token": {
-      "title": "Autentikasi dengan Energy Tracker gagal",
-      "description": "Token akses pribadi yang dikonfigurasi tidak valid atau telah kedaluwarsa. Ini mencegah integrasi mengirim pembacaan meteran ke Energy Tracker.\n\nUntuk menyelesaikan masalah ini:\n1. Masuk ke akun Energy Tracker Anda\n2. Navigasi ke Pengaturan > Token Akses\n3. Cabut token lama jika masih terdaftar\n4. Klik 'Buat Token Baru' dan salin\n5. Di Home Assistant, buka Pengaturan > Perangkat & Layanan\n6. Temukan Energy Tracker dan klik 'Konfigurasi'\n7. Tempel token baru dan simpan\n\nSetelah menyelesaikan langkah-langkah ini, integrasi akan terhubung kembali secara otomatis."
-    },
-    "auth_error_insufficient_permissions": {
-      "title": "Izin tidak mencukupi untuk Energy Tracker",
-      "description": "Token akses pribadi yang dikonfigurasi tidak memiliki izin yang diperlukan untuk mengirim pembacaan meteran.\n\nUntuk menyelesaikan masalah ini:\n1. Masuk ke akun Energy Tracker Anda\n2. Navigasi ke Pengaturan > Token Akses\n3. Periksa izin token Anda saat ini\n4. Jika izin tidak dapat diubah, buat token baru dengan akses 'Tulis' untuk pembacaan meteran\n5. Di Home Assistant, buka Pengaturan > Perangkat & Layanan\n6. Temukan Energy Tracker dan klik 'Konfigurasi'\n7. Tempel token baru dan simpan\n\nSetelah menyelesaikan langkah-langkah ini, integrasi akan memiliki izin yang diperlukan."
-    }
-  },
   "exceptions": {
     "timeout": {
       "message": "Waktu permintaan habis. Periksa koneksi jaringan dan coba lagi."

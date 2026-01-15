@@ -52,9 +52,7 @@ class TestSendMeterReading:
     """Test send_meter_reading method."""
 
     @pytest.mark.asyncio
-    async def test_send_meter_reading_success(
-        self, hass, api_token, device_id, mock_issue_registry
-    ):
+    async def test_send_meter_reading_success(self, hass, api_token, device_id):
         """Test successful meter reading submission."""
         # Arrange
         timestamp = datetime(2025, 11, 28, 10, 30, 0, tzinfo=UTC)
@@ -87,7 +85,7 @@ class TestSendMeterReading:
 
     @pytest.mark.asyncio
     async def test_send_meter_reading_without_rounding(
-        self, hass, api_token, device_id, mock_issue_registry
+        self, hass, api_token, device_id
     ):
         """Test meter reading submission without rounding."""
         # Arrange
@@ -117,7 +115,7 @@ class TestSendMeterReading:
 
     @pytest.mark.asyncio
     async def test_send_meter_reading_validation_error(
-        self, hass, api_token, device_id, mock_issue_registry
+        self, hass, api_token, device_id
     ):
         """Test meter reading with validation error (HTTP 400)."""
         # Arrange
@@ -152,7 +150,7 @@ class TestSendMeterReading:
 
     @pytest.mark.asyncio
     async def test_send_meter_reading_authentication_error(
-        self, hass, api_token, device_id, mock_issue_registry
+        self, hass, api_token, device_id
     ):
         """Test meter reading with authentication error (HTTP 401)."""
         # Arrange
@@ -177,20 +175,10 @@ class TestSendMeterReading:
                     timestamp=timestamp,
                 )
 
-            # Assert issue was created
-            mock_issue_registry.assert_called_once()
-            assert (
-                mock_issue_registry.call_args[1]["translation_key"]
-                == "auth_error_invalid_token"
-            )
-
-            # Assert exception
             assert exc_info.value.translation_key == "auth_failed"
 
     @pytest.mark.asyncio
-    async def test_send_meter_reading_forbidden_error(
-        self, hass, api_token, device_id, mock_issue_registry
-    ):
+    async def test_send_meter_reading_forbidden_error(self, hass, api_token, device_id):
         """Test meter reading with forbidden error (HTTP 403)."""
         # Arrange
         timestamp = datetime(2025, 11, 28, 10, 30, 0, tzinfo=UTC)
@@ -214,20 +202,10 @@ class TestSendMeterReading:
                     timestamp=timestamp,
                 )
 
-            # Assert issue was created
-            mock_issue_registry.assert_called_once()
-            assert (
-                mock_issue_registry.call_args[1]["translation_key"]
-                == "auth_error_insufficient_permissions"
-            )
-
-            # Assert exception
             assert exc_info.value.translation_key == "auth_failed"
 
     @pytest.mark.asyncio
-    async def test_send_meter_reading_not_found_error(
-        self, hass, api_token, device_id, mock_issue_registry
-    ):
+    async def test_send_meter_reading_not_found_error(self, hass, api_token, device_id):
         """Test meter reading with not found error (HTTP 404)."""
         # Arrange
         timestamp = datetime(2025, 11, 28, 10, 30, 0, tzinfo=UTC)
@@ -254,9 +232,7 @@ class TestSendMeterReading:
             assert exc_info.value.translation_key == "device_not_found"
 
     @pytest.mark.asyncio
-    async def test_send_meter_reading_conflict_error(
-        self, hass, api_token, device_id, mock_issue_registry
-    ):
+    async def test_send_meter_reading_conflict_error(self, hass, api_token, device_id):
         """Test meter reading with conflict error (HTTP 409)."""
         # Arrange
         timestamp = datetime(2025, 11, 28, 10, 30, 0, tzinfo=UTC)
@@ -289,7 +265,7 @@ class TestSendMeterReading:
 
     @pytest.mark.asyncio
     async def test_send_meter_reading_rate_limit_with_retry(
-        self, hass, api_token, device_id, mock_issue_registry
+        self, hass, api_token, device_id
     ):
         """Test meter reading with rate limit error including retry_after."""
         # Arrange
@@ -319,7 +295,7 @@ class TestSendMeterReading:
 
     @pytest.mark.asyncio
     async def test_send_meter_reading_rate_limit_without_retry(
-        self, hass, api_token, device_id, mock_issue_registry
+        self, hass, api_token, device_id
     ):
         """Test meter reading with rate limit error without retry_after."""
         # Arrange
@@ -347,9 +323,7 @@ class TestSendMeterReading:
             assert exc_info.value.translation_key == "rate_limit_no_time"
 
     @pytest.mark.asyncio
-    async def test_send_meter_reading_timeout_error(
-        self, hass, api_token, device_id, mock_issue_registry
-    ):
+    async def test_send_meter_reading_timeout_error(self, hass, api_token, device_id):
         """Test meter reading with timeout error."""
         # Arrange
         timestamp = datetime(2025, 11, 28, 10, 30, 0, tzinfo=UTC)
@@ -376,9 +350,7 @@ class TestSendMeterReading:
             assert exc_info.value.translation_key == "timeout"
 
     @pytest.mark.asyncio
-    async def test_send_meter_reading_network_error(
-        self, hass, api_token, device_id, mock_issue_registry
-    ):
+    async def test_send_meter_reading_network_error(self, hass, api_token, device_id):
         """Test meter reading with network error."""
         # Arrange
         timestamp = datetime(2025, 11, 28, 10, 30, 0, tzinfo=UTC)
@@ -405,9 +377,7 @@ class TestSendMeterReading:
             assert exc_info.value.translation_key == "network_error"
 
     @pytest.mark.asyncio
-    async def test_send_meter_reading_server_error(
-        self, hass, api_token, device_id, mock_issue_registry
-    ):
+    async def test_send_meter_reading_server_error(self, hass, api_token, device_id):
         """Test meter reading with server error (5xx)."""
         # Arrange
         timestamp = datetime(2025, 11, 28, 10, 30, 0, tzinfo=UTC)
@@ -441,7 +411,7 @@ class TestSendMeterReading:
 
     @pytest.mark.asyncio
     async def test_send_meter_reading_unexpected_error(
-        self, hass, api_token, device_id, mock_issue_registry
+        self, hass, api_token, device_id
     ):
         """Test meter reading with unexpected error."""
         # Arrange
