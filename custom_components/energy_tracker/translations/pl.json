@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Przekonfiguruj Energy Tracker",
-        "description": "Zaktualizuj ustawienia konta Energy Tracker. Pozostaw pola puste, aby zachować istniejące wartości.",
+        "description": "Zaktualizuj swój osobisty token dostępu Energy Tracker.",
         "data": {
-          "name": "Nazwa konta",
           "api_token": "Osobisty token dostępu"
         },
         "data_description": {
-          "name": "Rozpoznawalna nazwa dla tego konta.",
-          "api_token": "Wprowadź nowy token lub pozostaw puste, aby zachować istniejący."
+          "api_token": "Twój osobisty token dostępu z aplikacji Energy Tracker."
         }
       }
     },

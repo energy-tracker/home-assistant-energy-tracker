@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Määritä Energy Tracker uudelleen",
-        "description": "Päivitä Energy Tracker -tilisi asetukset. Jätä kentät tyhjiksi säilyttääksesi nykyiset arvot.",
+        "description": "Päivitä Energy Tracker -henkilökohtainen käyttöoikeustunnuksesi.",
         "data": {
-          "name": "Tilin nimi",
           "api_token": "Henkilökohtainen käyttöoikeustunnus"
         },
         "data_description": {
-          "name": "Tunnistettava nimi tälle tilille.",
-          "api_token": "Syötä uusi tunnus tai jätä tyhjäksi säilyttääksesi nykyisen."
+          "api_token": "Henkilökohtainen käyttöoikeustunnuksesi Energy Tracker -sovelluksesta."
         }
       }
     },

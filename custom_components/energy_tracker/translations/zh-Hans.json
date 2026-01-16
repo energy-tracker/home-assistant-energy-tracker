@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "重新配置 Energy Tracker",
-        "description": "更新您的 Energy Tracker 账户设置。留空字段以保留现有值。",
+        "description": "更新您的 Energy Tracker 个人访问令牌。",
         "data": {
-          "name": "账户名称",
           "api_token": "个人访问令牌"
         },
         "data_description": {
-          "name": "此账户的可识别名称。",
-          "api_token": "输入新令牌，或留空以保留现有令牌。"
+          "api_token": "您在 Energy Tracker 应用中的个人访问令牌。"
         }
       }
     },

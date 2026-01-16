@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Reconfigurați Energy Tracker",
-        "description": "Actualizați setările contului Energy Tracker. Lăsați câmpurile goale pentru a păstra valorile existente.",
+        "description": "Actualizați tokenul dvs. personal de acces Energy Tracker.",
         "data": {
-          "name": "Nume cont",
           "api_token": "Token de acces personal"
         },
         "data_description": {
-          "name": "Un nume recognoscibil pentru acest cont.",
-          "api_token": "Introduceți un nou token sau lăsați gol pentru a păstra cel existent."
+          "api_token": "Tokenul dvs. personal de acces din aplicația Energy Tracker."
         }
       }
     },

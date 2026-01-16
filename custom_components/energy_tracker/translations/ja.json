@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Energy Tracker を再設定",
-        "description": "Energy Trackerアカウントの設定を更新します。既存の値を保持するにはフィールドを空白のままにしてください。",
+        "description": "Energy Trackerの個人アクセストークンを更新します。",
         "data": {
-          "name": "アカウント名",
           "api_token": "個人アクセストークン"
         },
         "data_description": {
-          "name": "このアカウントの認識しやすい名前。",
-          "api_token": "新しいトークンを入力するか、既存のものを保持するには空白のままにしてください。"
+          "api_token": "Energy Trackerアプリからの個人アクセストークン。"
         }
       }
     },

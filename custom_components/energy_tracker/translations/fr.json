@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Reconfigurer Energy Tracker",
-        "description": "Mettez à jour les paramètres de votre compte Energy Tracker. Laissez les champs vides pour conserver les valeurs existantes.",
+        "description": "Mettez à jour votre jeton d'accès personnel Energy Tracker.",
         "data": {
-          "name": "Nom du compte",
           "api_token": "Jeton d'accès personnel"
         },
         "data_description": {
-          "name": "Un nom reconnaissable pour ce compte.",
-          "api_token": "Entrez un nouveau jeton ou laissez vide pour conserver l'existant."
+          "api_token": "Votre jeton d'accès personnel de l'application Energy Tracker."
         }
       }
     },

@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "重新設定 Energy Tracker",
-        "description": "更新您的 Energy Tracker 帳戶設定。留空欄位以保留現有值。",
+        "description": "更新您的 Energy Tracker 個人存取權杖。",
         "data": {
-          "name": "帳戶名稱",
           "api_token": "個人存取令牌"
         },
         "data_description": {
-          "name": "此帳戶的可識別名稱。",
-          "api_token": "輸入新權杖，或留空以保留現有權杖。"
+          "api_token": "您在 Energy Tracker 應用程式中的個人存取權杖。"
         }
       }
     },

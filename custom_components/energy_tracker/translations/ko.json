@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Energy Tracker 재구성",
-        "description": "Energy Tracker 계정 설정을 업데이트합니다. 기존 값을 유지하려면 필드를 비워 두세요.",
+        "description": "Energy Tracker 개인 액세스 토큰을 업데이트합니다.",
         "data": {
-          "name": "계정 이름",
           "api_token": "개인 액세스 토큰"
         },
         "data_description": {
-          "name": "이 계정의 인식 가능한 이름.",
-          "api_token": "새 토큰을 입력하거나 기존 토큰을 유지하려면 비워 두세요."
+          "api_token": "Energy Tracker 앱의 개인 액세스 토큰."
         }
       }
     },

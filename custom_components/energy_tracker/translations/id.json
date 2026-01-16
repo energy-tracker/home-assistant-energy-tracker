@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Konfigurasi Ulang Energy Tracker",
-        "description": "Perbarui pengaturan akun Energy Tracker Anda. Biarkan kolom kosong untuk mempertahankan nilai yang ada.",
+        "description": "Perbarui token akses pribadi Energy Tracker Anda.",
         "data": {
-          "name": "Nama akun",
           "api_token": "Token akses pribadi"
         },
         "data_description": {
-          "name": "Nama yang dapat dikenali untuk akun ini.",
-          "api_token": "Masukkan token baru, atau biarkan kosong untuk mempertahankan yang ada."
+          "api_token": "Token akses pribadi Anda dari aplikasi Energy Tracker."
         }
       }
     },

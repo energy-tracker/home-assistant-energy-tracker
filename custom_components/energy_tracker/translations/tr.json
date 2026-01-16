@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Energy Tracker'ı Yeniden Yapılandır",
-        "description": "Energy Tracker hesap ayarlarınızı güncelleyin. Mevcut değerleri korumak için alanları boş bırakın.",
+        "description": "Energy Tracker kişisel erişim tokeninizi güncelleyin.",
         "data": {
-          "name": "Hesap adı",
           "api_token": "Kişisel erişim belirteci"
         },
         "data_description": {
-          "name": "Bu hesap için tanınabilir bir ad.",
-          "api_token": "Yeni bir token girin veya mevcut olanı korumak için boş bırakın."
+          "api_token": "Energy Tracker uygulamasından kişisel erişim tokeniniz."
         }
       }
     },

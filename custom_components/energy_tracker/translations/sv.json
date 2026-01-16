@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Omkonfigurera Energy Tracker",
-        "description": "Uppdatera dina Energy Tracker-kontoinställningar. Lämna fält tomma för att behålla befintliga värden.",
+        "description": "Uppdatera din personliga åtkomsttoken för Energy Tracker.",
         "data": {
-          "name": "Kontonamn",
           "api_token": "Personlig åtkomsttoken"
         },
         "data_description": {
-          "name": "Ett igenkännligt namn för detta konto.",
-          "api_token": "Ange en ny token eller lämna tomt för att behålla befintlig."
+          "api_token": "Din personliga åtkomsttoken från Energy Tracker-appen."
         }
       }
     },

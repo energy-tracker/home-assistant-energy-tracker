@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Energy Tracker újrakonfigurálása",
-        "description": "Frissítse Energy Tracker fiókbeállításait. Hagyja üresen a mezőket a meglévő értékek megtartásához.",
+        "description": "Frissítse Energy Tracker személyes hozzáférési tokenjét.",
         "data": {
-          "name": "Fióknév",
           "api_token": "Személyes hozzáférési token"
         },
         "data_description": {
-          "name": "Egy felismerhető név ehhez a fiókhoz.",
-          "api_token": "Adjon meg új tokent, vagy hagyja üresen a meglévő megtartásához."
+          "api_token": "Személyes hozzáférési tokenje az Energy Tracker alkalmazásból."
         }
       }
     },

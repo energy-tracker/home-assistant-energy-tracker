@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Energy Tracker opnieuw configureren",
-        "description": "Werk uw Energy Tracker-accountinstellingen bij. Laat velden leeg om bestaande waarden te behouden.",
+        "description": "Werk uw persoonlijke toegangstoken voor Energy Tracker bij.",
         "data": {
-          "name": "Accountnaam",
           "api_token": "Persoonlijk toegangstoken"
         },
         "data_description": {
-          "name": "Een herkenbare naam voor dit account.",
-          "api_token": "Voer een nieuw token in of laat leeg om het bestaande te behouden."
+          "api_token": "Uw persoonlijke toegangstoken van de Energy Tracker-app."
         }
       }
     },

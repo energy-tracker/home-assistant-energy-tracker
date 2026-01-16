@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Cấu hình lại Energy Tracker",
-        "description": "Cập nhật cài đặt tài khoản Energy Tracker của bạn. Để trống các trường để giữ các giá trị hiện có.",
+        "description": "Cập nhật mã thông báo truy cập cá nhân Energy Tracker của bạn.",
         "data": {
-          "name": "Tên tài khoản",
           "api_token": "Mã token truy cập cá nhân"
         },
         "data_description": {
-          "name": "Một tên dễ nhận biết cho tài khoản này.",
-          "api_token": "Nhập mã thông báo mới hoặc để trống để giữ mã hiện có."
+          "api_token": "Mã thông báo truy cập cá nhân của bạn từ ứng dụng Energy Tracker."
         }
       }
     },

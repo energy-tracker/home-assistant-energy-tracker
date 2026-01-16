@@ -15,14 +15,12 @@
       },
       "reconfigure": {
         "title": "Prekonfigurovať Energy Tracker",
-        "description": "Aktualizujte nastavenia účtu Energy Tracker. Ponechajte polia prázdne, aby ste zachovali existujúce hodnoty.",
+        "description": "Aktualizujte svoj osobný prístupový token Energy Tracker.",
         "data": {
-          "name": "Názov účtu",
           "api_token": "Osobný prístupový token"
         },
         "data_description": {
-          "name": "Rozpoznateľný názov pre tento účet.",
-          "api_token": "Zadajte nový token alebo ponechajte prázdne, aby ste zachovali existujúci."
+          "api_token": "Váš osobný prístupový token z aplikácie Energy Tracker."
         }
       }
     },
