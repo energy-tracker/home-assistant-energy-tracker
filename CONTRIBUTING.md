@@ -4,10 +4,10 @@
 
 CI and `make install` use `requirements-dev.lock` as constraints for the test tools,
 Home Assistant and the API client. CI reads the Python version from the matching
-Home Assistant release. The current test baseline is Home Assistant 2026.1.1 on Python 3.13.
+Home Assistant release. The current test baseline is Home Assistant 2026.3.1 on Python 3.14.2 or newer.
 
 ```bash
-make venv PYTHON=python3.13
+make venv PYTHON=python3.14
 make install
 make test
 ```
