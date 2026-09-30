@@ -3,7 +3,7 @@
 
 This script fetches the ruff configuration from Home Assistant Core's pyproject.toml,
 transforms paths for custom_components structure, applies local overrides,
-and generates a ruff.generated.toml file.
+and generates a ruff.core.toml file for the locked Home Assistant release.
 
 It also syncs the Python version requirement.
 """
@@ -12,9 +12,7 @@ import re
 import urllib.request
 from pathlib import Path
 
-CORE_PYPROJECT_URL = (
-    "https://raw.githubusercontent.com/home-assistant/core/dev/pyproject.toml"
-)
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 # Local overrides - add rules to ignore or paths to adjust
 LOCAL_OVERRIDES = {
@@ -38,9 +36,20 @@ LOCAL_OVERRIDES = {
 
 
 def fetch_core_config() -> str:
-    """Fetch pyproject.toml from Home Assistant Core."""
-    print(f"Fetching {CORE_PYPROJECT_URL}...")
-    with urllib.request.urlopen(CORE_PYPROJECT_URL) as response:
+    """Fetch pyproject.toml from the same Home Assistant release used by CI."""
+    versions = [
+        line.removeprefix("homeassistant==").strip()
+        for line in (PROJECT_ROOT / "requirements-dev.lock").read_text().splitlines()
+        if line.startswith("homeassistant==")
+    ]
+    if len(versions) != 1 or not versions[0]:
+        raise ValueError("requirements-dev.lock must contain one homeassistant== pin")
+    url = (
+        "https://raw.githubusercontent.com/home-assistant/core/"
+        f"{versions[0]}/pyproject.toml"
+    )
+    print(f"Fetching {url}...")
+    with urllib.request.urlopen(url, timeout=30) as response:
         return response.read().decode("utf-8")
 
 
@@ -171,7 +180,7 @@ def add_local_overrides(content: str) -> str:
 
 def update_python_version_in_files(python_version: str) -> None:
     """Update Python version in ruff.base.toml, pyproject.toml, and CI workflow."""
-    project_root = Path(__file__).parent.parent
+    project_root = PROJECT_ROOT
     py_version = f"py{python_version.replace('.', '')}"  # 3.13 -> py313
 
     # Update ruff.base.toml
@@ -211,7 +220,9 @@ def update_python_version_in_files(python_version: str) -> None:
         )
         if new_content != content:
             ci_path.write_text(new_content)
-            print(f'Updated .github/workflows/ci.yml: python-version: "{python_version}"')
+            print(
+                f'Updated .github/workflows/ci.yml: python-version: "{python_version}"'
+            )
 
 
 def main() -> None:
@@ -240,7 +251,7 @@ def main() -> None:
     ruff_content = add_local_overrides(ruff_content)
 
     # Write output
-    output_path = Path(__file__).parent.parent / "ruff.core.toml"
+    output_path = PROJECT_ROOT / "ruff.core.toml"
 
     # Remove write protection if file exists (from previous sync)
     if output_path.exists():
@@ -253,7 +264,7 @@ def main() -> None:
     print(f"\nGenerated: {output_path} (read-only)")
 
     # Also create/update ruff.base.toml that extends from core
-    base_ruff_path = Path(__file__).parent.parent / "ruff.base.toml"
+    base_ruff_path = PROJECT_ROOT / "ruff.base.toml"
     if not base_ruff_path.exists():
         base_ruff_content = """\
 # Ruff configuration for energy-tracker custom component

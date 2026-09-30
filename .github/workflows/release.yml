@@ -6,7 +6,11 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   ci:
@@ -15,10 +19,10 @@ jobs:
 
   hacs:
     name: HACS Validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: HACS validation
         uses: hacs/action@main
@@ -27,30 +31,32 @@ jobs:
 
   hassfest:
     name: Hassfest Validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Hassfest validation
         uses: home-assistant/actions/hassfest@master
 
   release:
     name: Create Release
+    permissions:
+      contents: write
     needs:
       - ci
       - hacs
       - hassfest
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Extract tag name
         id: tag
-        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
       - name: Validate version matches tag
         env:
@@ -64,44 +70,15 @@ jobs:
           fi
           echo "✅ Version match: $MANIFEST_VERSION"
 
-      - name: Generate changelog
-        id: changelog
-        run: |
-          # Get previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
-          if [ -z "$PREV_TAG" ]; then
-            # First release - get all commits
-            COMMITS=$(git log --pretty=format:"- %s (%h)" --no-merges)
-          else
-            # Get commits since previous tag
-            COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
-          fi
-          
-          # Save to file for multiline output
-          echo "$COMMITS" > changelog.txt
-
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        env:
-          TAG_NAME: ${{ steps.tag.outputs.TAG_NAME }}
+        uses: softprops/action-gh-release@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ env.TAG_NAME }}
-          name: Release ${{ env.TAG_NAME }}
+          tag_name: ${{ steps.tag.outputs.TAG_NAME }}
+          name: Release ${{ steps.tag.outputs.TAG_NAME }}
           body: |
-            ## Energy Tracker Integration ${{ env.TAG_NAME }}
-
             Install via [HACS](https://hacs.xyz/) or manually copy `custom_components/energy_tracker/` to your Home Assistant config.
 
-            ### Changes
-
-            ${{ steps.changelog.outputs.COMMITS }}
-
-            ### Documentation
-
-            - [README](https://github.com/energy-tracker/home-assistant-energy-tracker#readme)
-            - [Energy Tracker Website](https://www.energy-tracker.best-ios-apps.de)
+            [Setup and usage](https://github.com/energy-tracker/home-assistant-energy-tracker#readme)
           draft: false
           prerelease: false
-          generate_release_notes: false
+          generate_release_notes: true

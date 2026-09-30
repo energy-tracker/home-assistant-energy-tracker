@@ -1,20 +1,18 @@
 .PHONY: venv install test lint format sync-ruff sync-deps
 
+PYTHON ?= python3
+
 venv:
-	python3 -m venv .venv
+	$(PYTHON) -m venv .venv
 
 install:
-	. .venv/bin/activate && pip install -r requirements-dev.txt
+	. .venv/bin/activate && pip install -r requirements-dev.txt -c requirements-dev.lock
 
 sync-deps:
-	@echo "🔄 Syncing pytest-homeassistant-custom-component to latest version..."
-	. .venv/bin/activate && pip install --upgrade pytest-homeassistant-custom-component
-	@echo "🔄 Upgrading dev tools (ruff, mypy)..."
-	. .venv/bin/activate && pip install --upgrade ruff mypy energy-tracker-api
+	@echo "🔄 Updating dependencies within requirements and manifest constraints..."
+	.venv/bin/python scripts/sync_dependencies.py
 	@echo "🔄 Syncing ruff config and Python version from Home Assistant Core..."
 	. .venv/bin/activate && python3 scripts/sync_ruff_config.py
-	@echo "🔄 Writing locked versions to requirements-dev.lock..."
-	. .venv/bin/activate && pip freeze | grep -iE '^(pytest-homeassistant-custom-component|homeassistant|ruff|mypy|pytest|pytest-asyncio|pytest-cov|energy-tracker-api)=' > requirements-dev.lock
 	@echo "✅ Dependencies synced and locked"
 
 test:

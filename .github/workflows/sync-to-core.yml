@@ -6,7 +6,11 @@ on:
       - "core-v*"
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   ci:
@@ -16,10 +20,10 @@ jobs:
   sync:
     name: Sync to Core Fork
     needs: ci
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout source repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -28,21 +32,16 @@ jobs:
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
           VERSION=${TAG_NAME#core-}
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Checkout core fork
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: energy-tracker/core
           token: ${{ secrets.CORE_SYNC_TOKEN }}
           path: core-fork
           fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ needs.ci.outputs.python-version }}
 
       - name: Configure git
         working-directory: core-fork
@@ -68,72 +67,21 @@ jobs:
           VERSION: ${{ steps.tag.outputs.VERSION }}
         run: |
           # Check if branch exists remotely
-          if git ls-remote --heads origin energy-tracker-$VERSION | grep -q energy-tracker-$VERSION; then
+          if git ls-remote --heads origin "energy-tracker-$VERSION" | grep -q "energy-tracker-$VERSION"; then
             echo "Branch exists, will update it"
-            git checkout -B energy-tracker-$VERSION origin/dev
+            git checkout -B "energy-tracker-$VERSION" origin/dev
           else
             echo "Creating new branch"
-            git checkout -b energy-tracker-$VERSION origin/dev
+            git checkout -b "energy-tracker-$VERSION" origin/dev
           fi
 
-      - name: Sync component files
-        run: |
-          # Remove old component files
-          rm -rf core-fork/homeassistant/components/energy_tracker
-          
-          # Copy component files
-          mkdir -p core-fork/homeassistant/components/energy_tracker
-          cp -r custom_components/energy_tracker/* core-fork/homeassistant/components/energy_tracker/
+      - name: Set up Python for Core
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: core-fork/.python-version
 
-      - name: Sync test files
-        run: |
-          # Remove old test files
-          rm -rf core-fork/tests/components/energy_tracker
-          
-          # Copy test files
-          mkdir -p core-fork/tests/components/energy_tracker
-          cp -r tests/* core-fork/tests/components/energy_tracker/
-
-      - name: Rewrite imports for Core
-        run: |
-          # Rewrite imports from custom_components to homeassistant.components
-          find core-fork/homeassistant/components/energy_tracker -type f -name "*.py" -print0 | xargs -0 sed -i 's/from custom_components\.energy_tracker/from homeassistant.components.energy_tracker/g'
-          find core-fork/homeassistant/components/energy_tracker -type f -name "*.py" -print0 | xargs -0 sed -i 's/import custom_components\.energy_tracker/import homeassistant.components.energy_tracker/g'
-          find core-fork/tests/components/energy_tracker -type f -name "*.py" -print0 | xargs -0 sed -i 's/from custom_components\.energy_tracker/from homeassistant.components.energy_tracker/g'
-          find core-fork/tests/components/energy_tracker -type f -name "*.py" -print0 | xargs -0 sed -i 's/import custom_components\.energy_tracker/import homeassistant.components.energy_tracker/g'
-
-          # Rewrite test imports from pytest_homeassistant_custom_component to homeassistant
-          find core-fork/tests/components/energy_tracker -type f -name "*.py" -print0 | xargs -0 sed -i 's/from pytest_homeassistant_custom_component\.common import MockConfigEntry/from tests.common import MockConfigEntry/g'
-          find core-fork/tests/components/energy_tracker -type f -name "*.py" -print0 | xargs -0 sed -i 's/from pytest_homeassistant_custom_component\.common/from tests.common/g'
-
-          # Rewrite patch paths in test strings from custom_components to homeassistant.components
-          find core-fork/tests/components/energy_tracker -type f -name "*.py" -print0 | xargs -0 sed -i 's/"custom_components\.energy_tracker/"homeassistant.components.energy_tracker/g'
-
-          # Remove type: ignore comments that are not needed in Core (Core has proper type stubs)
-          find core-fork/homeassistant/components/energy_tracker -type f -name "*.py" -print0 | xargs -0 sed -i 's/  # type: ignore\[call-arg\]//g'
-
-          # Rewrite config_flow.py imports for Core (Core requires ConfigFlow and ConfigFlowResult from config_entries)
-          sed -i 's/from homeassistant import config_entries/from homeassistant.config_entries import ConfigFlow, ConfigFlowResult/g' core-fork/homeassistant/components/energy_tracker/config_flow.py
-          sed -i '/from homeassistant.data_entry_flow import FlowResult/d' core-fork/homeassistant/components/energy_tracker/config_flow.py
-          sed -i 's/config_entries\.ConfigFlow/ConfigFlow/g' core-fork/homeassistant/components/energy_tracker/config_flow.py
-          sed -i 's/) -> FlowResult:/) -> ConfigFlowResult:/g' core-fork/homeassistant/components/energy_tracker/config_flow.py
-
-          # Remove pytest_homeassistant_custom_component plugin line from conftest.py (not needed in core)
-          find core-fork/tests/components/energy_tracker -type f -name "conftest.py" -print0 | xargs -0 sed -i '/pytest_plugins = "pytest_homeassistant_custom_component"/d'
-
-          # Remove auto_enable_custom_integrations fixture from conftest.py (not needed in core)
-          # This removes the entire fixture block (decorator + function definition + docstring + body)
-          find core-fork/tests/components/energy_tracker -type f -name "conftest.py" -print0 | xargs -0 sed -i '/@pytest.fixture(autouse=True)/{N;N;N;N;d}'
-
-          # Remove version from manifest.json (only used for custom components, not Core)
-          sed -i '/"version":/d' core-fork/homeassistant/components/energy_tracker/manifest.json
-
-          # Replace documentation URL with Home Assistant Core URL
-          sed -i 's|"documentation": "https://github.com/[^"]*"|"documentation": "https://www.home-assistant.io/integrations/energy_tracker/"|g' core-fork/homeassistant/components/energy_tracker/manifest.json
-
-          # Replace abort strings with common Home Assistant Core references
-          sed -i 's/"already_configured": "[^"]*"/"already_configured": "[%key:common::config_flow::abort::already_configured_account%]"/g' core-fork/homeassistant/components/energy_tracker/strings.json
-          sed -i 's/"reconfigure_successful": "[^"]*"/"reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"/g' core-fork/homeassistant/components/energy_tracker/strings.json
+      - name: Export integration and tests for Core
+        run: python scripts/export_to_core.py core-fork
 
       - name: Generate requirements files
         working-directory: core-fork
@@ -165,6 +113,6 @@ jobs:
           VERSION: ${{ steps.tag.outputs.VERSION }}
         run: |
           # Force push to update existing branch (if PR exists) or push new branch
-          git push --force origin energy-tracker-$VERSION
+          git push --force origin "energy-tracker-$VERSION"
           echo "✅ Branch energy-tracker-$VERSION pushed to energy-tracker/core"
           echo "Existing PR will be automatically updated with new commits"
