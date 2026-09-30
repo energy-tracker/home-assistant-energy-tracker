@@ -64,7 +64,7 @@
       "message": "Varlık {entity_id} durumu {state}."
     },
     "invalid_number": {
-      "message": "Varlık {entity_id} için \"{state}\" değeri bir sayı değil."
+      "message": "{entity_id} varlığından gelen \"{state}\" sayaç değeri geçersiz. Değer sonlu, negatif olmayan ve 10000000000 değerinden küçük olmalıdır."
     },
     "missing_timestamp": {
       "message": "Varlık {entity_id} için zaman damgası yok."

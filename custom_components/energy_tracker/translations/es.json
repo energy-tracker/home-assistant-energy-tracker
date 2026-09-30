@@ -64,7 +64,7 @@
       "message": "La entidad {entity_id} está {state}."
     },
     "invalid_number": {
-      "message": "El valor \"{state}\" de la entidad {entity_id} no es un número."
+      "message": "Lectura de contador \"{state}\" no válida de la entidad {entity_id}. El valor debe ser finito, no negativo e inferior a 10000000000."
     },
     "missing_timestamp": {
       "message": "La entidad {entity_id} no tiene marca de tiempo."

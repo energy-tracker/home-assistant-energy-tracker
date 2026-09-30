@@ -64,7 +64,7 @@
       "message": "Entitas {entity_id} dalam keadaan {state}."
     },
     "invalid_number": {
-      "message": "Nilai \"{state}\" dari entitas {entity_id} bukan angka."
+      "message": "Pembacaan meter \"{state}\" dari entitas {entity_id} tidak valid. Nilai harus berhingga, tidak negatif, dan kurang dari 10000000000."
     },
     "missing_timestamp": {
       "message": "Entitas {entity_id} tidak memiliki stempel waktu."

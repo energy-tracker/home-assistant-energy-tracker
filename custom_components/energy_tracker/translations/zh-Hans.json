@@ -64,7 +64,7 @@
       "message": "实体 {entity_id} 处于 {state} 状态。"
     },
     "invalid_number": {
-      "message": "实体 {entity_id} 的值 \"{state}\" 不是数字。"
+      "message": "实体 {entity_id} 的表读数“{state}”无效。值必须是有限的非负数，且小于 10000000000。"
     },
     "missing_timestamp": {
       "message": "实体 {entity_id} 没有时间戳。"

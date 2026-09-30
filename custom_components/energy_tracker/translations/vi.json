@@ -64,7 +64,7 @@
       "message": "Thực thể {entity_id} ở trạng thái {state}."
     },
     "invalid_number": {
-      "message": "Giá trị \"{state}\" của thực thể {entity_id} không phải là số."
+      "message": "Chỉ số công tơ \"{state}\" từ thực thể {entity_id} không hợp lệ. Giá trị phải hữu hạn, không âm và nhỏ hơn 10000000000."
     },
     "missing_timestamp": {
       "message": "Thực thể {entity_id} không có dấu thời gian."

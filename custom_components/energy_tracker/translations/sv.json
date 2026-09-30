@@ -64,7 +64,7 @@
       "message": "Entitet {entity_id} är {state}."
     },
     "invalid_number": {
-      "message": "Värdet \"{state}\" för entitet {entity_id} är inte ett nummer."
+      "message": "Ogiltig mätarställning \"{state}\" från entiteten {entity_id}. Värdet måste vara ändligt, icke-negativt och mindre än 10000000000."
     },
     "missing_timestamp": {
       "message": "Entitet {entity_id} har ingen tidsstämpel."

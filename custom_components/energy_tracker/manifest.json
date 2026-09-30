@@ -12,7 +12,7 @@
   "issue_tracker": "https://github.com/energy-tracker/home-assistant-energy-tracker/issues",
   "quality_scale": "bronze",
   "requirements": [
-    "energy-tracker-api==1.0.0"
+    "energy-tracker-api==3.0.0"
   ],
   "version": "1.0.0"
 }

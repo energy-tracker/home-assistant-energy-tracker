@@ -64,7 +64,7 @@
       "message": "Entiteit {entity_id} is {state}."
     },
     "invalid_number": {
-      "message": "Waarde \"{state}\" van entiteit {entity_id} is geen getal."
+      "message": "Ongeldige meterstand \"{state}\" van entiteit {entity_id}. De waarde moet eindig, niet-negatief en kleiner dan 10000000000 zijn."
     },
     "missing_timestamp": {
       "message": "Entiteit {entity_id} heeft geen tijdstempel."

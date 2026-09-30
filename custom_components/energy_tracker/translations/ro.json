@@ -64,7 +64,7 @@
       "message": "Entitatea {entity_id} este în starea {state}."
     },
     "invalid_number": {
-      "message": "Valoarea \"{state}\" a entității {entity_id} nu este un număr."
+      "message": "Indexul contorului \"{state}\" de la entitatea {entity_id} este invalid. Valoarea trebuie să fie finită, nenegativă și mai mică decât 10000000000."
     },
     "missing_timestamp": {
       "message": "Entitatea {entity_id} nu are un timestamp."

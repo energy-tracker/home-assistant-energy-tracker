@@ -64,7 +64,7 @@
       "message": "Entitet {entity_id} er {state}."
     },
     "invalid_number": {
-      "message": "Værdien \"{state}\" for entitet {entity_id} er ikke et tal."
+      "message": "Ugyldig målerstand \"{state}\" fra entiteten {entity_id}. Værdien skal være endelig, ikke-negativ og mindre end 10000000000."
     },
     "missing_timestamp": {
       "message": "Entitet {entity_id} har intet tidsstempel."

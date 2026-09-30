@@ -64,7 +64,7 @@
       "message": "Entiteetti {entity_id} on tilassa {state}."
     },
     "invalid_number": {
-      "message": "Entiteetin {entity_id} arvo \"{state}\" ei ole numero."
+      "message": "Virheellinen mittarilukema \"{state}\" entiteetiltä {entity_id}. Arvon on oltava äärellinen, ei-negatiivinen ja pienempi kuin 10000000000."
     },
     "missing_timestamp": {
       "message": "Entiteetillä {entity_id} ei ole aikaleimaa."

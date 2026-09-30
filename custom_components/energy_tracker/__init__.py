@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import InvalidOperation
 import logging
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -19,6 +20,7 @@ import voluptuous as vol
 from .api import EnergyTrackerApi
 from .const import CONF_API_TOKEN, DOMAIN, SERVICE_SEND_METER_READING
 from .identity import token_unique_id
+from .meter_reading import parse_meter_reading_value
 
 type EnergyTrackerConfigEntry = ConfigEntry[EnergyTrackerApi]
 
@@ -28,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 
 SERVICE_SEND_METER_READING_SCHEMA = vol.Schema(
     {
-        vol.Required("device_id"): cv.string,
+        vol.Required("device_id"): vol.All(cv.string, vol.Strip, vol.Length(min=1)),
         vol.Required("source_entity_id"): cv.entity_id,
         vol.Required("entry_id"): cv.string,
         vol.Optional("allow_rounding", default=True): cv.boolean,
@@ -113,11 +115,9 @@ async def async_handle_send_meter_reading(
         )
 
     try:
-        value = float(raw_state)
-    except (TypeError, ValueError) as err:
-        LOGGER.error(
-            "Could not convert state '%s' of %s to number", raw_state, source_entity_id
-        )
+        value = parse_meter_reading_value(raw_state)
+    except (InvalidOperation, TypeError, ValueError) as err:
+        LOGGER.error("Invalid meter reading '%s' from %s", raw_state, source_entity_id)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="invalid_number",
