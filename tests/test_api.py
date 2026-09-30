@@ -25,6 +25,7 @@ from custom_components.energy_tracker.api import EnergyTrackerApi
 
 async def test_close_drains_requests_after_cancellation_and_failure():
     """Canceled and failed writes must release the client without admitting new ones."""
+    # Arrange
     entered = asyncio.Event()
     release = asyncio.Event()
     started = 0
@@ -51,22 +52,29 @@ async def test_close_drains_requests_after_cancellation_and_failure():
         close_task = None
         try:
             await asyncio.wait_for(entered.wait(), timeout=5)
+
+            # Act
             close_task = asyncio.create_task(api.async_close())
             await asyncio.sleep(0)
-            assert not close_task.done()
-            with pytest.raises(HomeAssistantError) as err:
+            close_pending_before_cancel = not close_task.done()
+            with pytest.raises(HomeAssistantError) as rejected_call:
                 await api.send_meter_reading(**data)
-            assert err.value.translation_key == "no_api_token"
             tasks[0].cancel()
             with pytest.raises(asyncio.CancelledError):
                 await tasks[0]
-            assert not close_task.done()
-            client.return_value.close.assert_not_awaited()
+            close_pending_after_cancel = not close_task.done()
+            close_calls_while_pending = client.return_value.close.await_count
             release.set()
-            with pytest.raises(HomeAssistantError) as err:
+            with pytest.raises(HomeAssistantError) as timed_out_call:
                 await tasks[1]
-            assert err.value.translation_key == "timeout"
             await asyncio.wait_for(close_task, timeout=5)
+
+            # Assert
+            assert close_pending_before_cancel
+            assert close_pending_after_cancel
+            assert close_calls_while_pending == 0
+            assert rejected_call.value.translation_key == "no_api_token"
+            assert timed_out_call.value.translation_key == "timeout"
             client.return_value.close.assert_awaited_once()
             assert started == 2
         finally:
