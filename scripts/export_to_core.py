@@ -4,6 +4,8 @@ import argparse
 import ast
 import json
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -49,7 +51,9 @@ def export_to_core(source_root: Path, core_root: Path) -> None:
         shutil.copytree(
             source,
             target,
-            ignore=shutil.ignore_patterns("tooling", "__pycache__", "*.pyc"),
+            ignore=shutil.ignore_patterns(
+                "tooling", "translations", "__pycache__", "*.pyc"
+            ),
         )
 
     for directory in (component, tests):
@@ -60,6 +64,9 @@ def export_to_core(source_root: Path, core_root: Path) -> None:
                 "homeassistant.components.energy_tracker",
             ).replace("pytest_homeassistant_custom_component.common", "tests.common")
             text = text.replace("  # type: ignore[call-arg]", "")
+            text = text.replace("from __future__ import annotations\n\n", "")
+            text = text.replace("import voluptuous as vol", "import probatio")
+            text = text.replace("vol.", "probatio.")
             path.write_text(text)
 
     flow = component / "config_flow.py"
@@ -100,6 +107,44 @@ def export_to_core(source_root: Path, core_root: Path) -> None:
             json.loads(path.read_text())
         for path in directory.rglob("*.py"):
             ast.parse(path.read_text(), filename=str(path))
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "ruff",
+            "check",
+            "--isolated",
+            "--select",
+            "I",
+            "--fix",
+            "--config",
+            "lint.isort.force-sort-within-sections = true",
+            "--config",
+            'lint.isort.known-first-party = ["homeassistant"]',
+            "--config",
+            'lint.isort.known-local-folder = ["tests"]',
+            "--config",
+            "lint.isort.combine-as-imports = true",
+            "--config",
+            "lint.isort.split-on-trailing-comma = false",
+            str(component),
+            str(tests),
+        ],
+        check=True,
+    )
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "ruff",
+            "format",
+            "--isolated",
+            str(component),
+            str(tests),
+        ],
+        check=True,
+    )
 
 
 if __name__ == "__main__":

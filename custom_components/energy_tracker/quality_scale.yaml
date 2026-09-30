@@ -1,37 +1,87 @@
-# Quality scale definition for Energy Tracker integration
-# https://developers.home-assistant.io/docs/integration_quality_scale_index/
-
-integration_type: service
-
 rules:
-  # Bronze tier (mandatory)
   action-setup: done
-
-  async-dependency: done
-  brands: done
+  appropriate-polling:
+    status: exempt
+    comment: Readings are sent only when the action is called; no data is polled.
+  brands:
+    status: todo
+    comment: Brand assets must be submitted to home-assistant/brands for the Core integration.
+  common-modules: done
   config-flow: done
   config-flow-test-coverage: done
-  # The API/SDK needs a non-mutating token check that supports write-only tokens.
-  test-before-configure: todo
-  test-before-setup: todo
-
+  dependency-transparency: done
+  docs-actions: todo
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide custom conditions or triggers.
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide custom conditions or triggers.
   entity-event-setup:
     status: exempt
-    comment: Integration does not create entities.
-
+    comment: This integration does not create entities.
   entity-unique-id:
     status: exempt
-    comment: Integration does not create entities.
-
-  exception-translations: done
-
+    comment: This integration does not create entities.
   has-entity-name:
     status: exempt
-    comment: Integration does not create entities.
-
-  integration-owner: done
-  iot-class-set: done
-  logged-errors: done
+    comment: This integration does not create entities.
   runtime-data: done
-  test-coverage: done
+  test-before-configure:
+    status: todo
+    comment: Requires a non-mutating API token check that also supports write-only tokens.
+  test-before-setup:
+    status: todo
+    comment: Requires a non-mutating API token check that also supports write-only tokens.
   unique-config-entry: done
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: exempt
+    comment: This integration does not create entities.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates:
+    status: exempt
+    comment: This integration does not create entities.
+  reauthentication-flow: todo
+  test-coverage: done
+  devices: todo
+  diagnostics: todo
+  discovery: todo
+  discovery-update-info: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: This integration does not create entities.
+  entity-device-class:
+    status: exempt
+    comment: This integration does not create entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not create entities.
+  entity-translations:
+    status: exempt
+    comment: This integration does not create entities.
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: Readings are sent only when the action is called; no data is polled.
+  async-dependency: done
+  inject-websession: todo
+  strict-typing: todo

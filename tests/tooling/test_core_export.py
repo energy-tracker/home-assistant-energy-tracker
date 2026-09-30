@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from scripts.export_to_core import export_to_core, remove_custom_test_setup
+import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -21,6 +22,7 @@ def test_core_export_contains_only_integration_files(tmp_path: Path) -> None:
     component = tmp_path / "homeassistant/components/energy_tracker"
     tests = tmp_path / "tests/components/energy_tracker"
     assert not (tests / "tooling").exists()
+    assert not (component / "translations").exists()
     assert sorted(path.name for path in tests.glob("test_*.py")) == [
         "test_api.py",
         "test_config_flow.py",
@@ -36,6 +38,9 @@ def test_core_export_contains_only_integration_files(tmp_path: Path) -> None:
             assert "custom_components.energy_tracker" not in source
             assert "pytest_homeassistant_custom_component" not in source
             assert "from scripts" not in source
+            assert "from __future__ import annotations" not in source
+            assert "import voluptuous" not in source
+            assert "vol." not in source
 
     manifest = json.loads((component / "manifest.json").read_text())
     assert "version" not in manifest
@@ -49,6 +54,8 @@ def test_core_export_contains_only_integration_files(tmp_path: Path) -> None:
     assert "-> ConfigFlowResult:" in flow
     assert "from homeassistant.data_entry_flow import AbortFlow\n" in flow
     assert "AbortFlow, FlowResult" not in flow
+    assert "import probatio" in flow
+    assert "probatio.Required" in flow
     conftest = (tests / "conftest.py").read_text()
     assert "auto_enable_custom_integrations" not in conftest
     assert "def api_token" in conftest
@@ -121,3 +128,28 @@ def test_export_rejects_destination_inside_source_before_copying(
     with pytest.raises(ValueError, match="Export destination must be outside"):
         export_to_core(tmp_path, tmp_path)
     assert list(tmp_path.iterdir()) == []
+
+
+def test_export_keeps_action_texts_in_translations() -> None:
+    """The action remains labeled after removing Core-incompatible YAML text."""
+    # Arrange
+    component = PROJECT_ROOT / "custom_components/energy_tracker"
+    services = yaml.safe_load((component / "services.yaml").read_text())
+    strings = json.loads((component / "strings.json").read_text())
+    icons = json.loads((component / "icons.json").read_text())
+
+    # Act
+    action = services["send_meter_reading"]
+    translated = strings["services"]["send_meter_reading"]
+
+    # Assert
+    assert "name" not in action
+    assert "description" not in action
+    assert translated["name"]
+    assert translated["description"]
+    assert icons["services"]["send_meter_reading"]["service"] == "mdi:counter"
+    for field, schema in action["fields"].items():
+        assert "name" not in schema
+        assert "description" not in schema
+        assert translated["fields"][field]["name"]
+        assert translated["fields"][field]["description"]
