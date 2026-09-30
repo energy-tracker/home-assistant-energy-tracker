@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 import logging
 
@@ -35,10 +36,14 @@ class EnergyTrackerApi:
         """Create the client owned by one loaded configuration entry."""
         self._client = EnergyTrackerClient(access_token=token)
         self._closed = False
+        self._pending_requests = 0
+        self._idle = asyncio.Event()
+        self._idle.set()
 
     async def async_close(self) -> None:
-        """Close the HTTP session owned by this client."""
+        """Stop accepting readings, drain pending requests, then close the session."""
         self._closed = True
+        await self._idle.wait()
         await self._client.close()
 
     async def send_meter_reading(
@@ -73,6 +78,8 @@ class EnergyTrackerApi:
             timestamp=timestamp,
         )
 
+        self._pending_requests += 1
+        self._idle.clear()
         try:
             await self._client.meter_readings.create(
                 device_id=device_id,
@@ -174,3 +181,7 @@ class EnergyTrackerApi:
                 translation_key="unknown_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+        finally:
+            self._pending_requests -= 1
+            if self._pending_requests == 0:
+                self._idle.set()
