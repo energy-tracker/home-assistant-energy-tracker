@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Bu kişisel erişim jetonu zaten yapılandırılmış. Her jeton yalnızca bir kez kullanılabilir.",
       "reconfigure_successful": "Yapılandırma başarıyla güncellendi."
+    },
+    "error": {
+      "required": "Bu alan zorunludur."
     }
   },
   "exceptions": {

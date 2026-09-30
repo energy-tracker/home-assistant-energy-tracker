@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Acest token de acces personal este deja configurat. Fiecare token poate fi utilizat o singură dată.",
       "reconfigure_successful": "Configurația a fost actualizată cu succes."
+    },
+    "error": {
+      "required": "Acest câmp este obligatoriu."
     }
   },
   "exceptions": {

@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Dette personlige adgangstoken er allerede konfigureret. Hvert token kan kun bruges én gang.",
       "reconfigure_successful": "Konfigurationen er blevet opdateret."
+    },
+    "error": {
+      "required": "Dette felt er påkrævet."
     }
   },
   "exceptions": {

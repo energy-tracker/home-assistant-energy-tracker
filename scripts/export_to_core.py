@@ -67,7 +67,10 @@ def export_to_core(source_root: Path, core_root: Path) -> None:
     text = text.replace(
         "from homeassistant import config_entries",
         "from homeassistant.config_entries import ConfigFlow, ConfigFlowResult",
-    ).replace("from homeassistant.data_entry_flow import FlowResult\n", "")
+    ).replace(
+        "from homeassistant.data_entry_flow import AbortFlow, FlowResult\n",
+        "from homeassistant.data_entry_flow import AbortFlow\n",
+    )
     text = text.replace("config_entries.ConfigFlow", "ConfigFlow")
     text = text.replace("-> FlowResult:", "-> ConfigFlowResult:")
     flow.write_text(text)

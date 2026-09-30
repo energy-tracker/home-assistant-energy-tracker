@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Este token de acceso personal ya está configurado. Cada token solo se puede usar una vez.",
       "reconfigure_successful": "Configuración actualizada correctamente."
+    },
+    "error": {
+      "required": "Este campo es obligatorio."
     }
   },
   "exceptions": {

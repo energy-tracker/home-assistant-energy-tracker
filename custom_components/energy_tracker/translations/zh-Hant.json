@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "此個人存取權杖已設定。每個權杖只能使用一次。",
       "reconfigure_successful": "設定已成功更新。"
+    },
+    "error": {
+      "required": "此欄位為必填項。"
     }
   },
   "exceptions": {

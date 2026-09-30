@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Mã thông báo truy cập cá nhân này đã được cấu hình. Mỗi mã thông báo chỉ có thể được sử dụng một lần.",
       "reconfigure_successful": "Cấu hình đã được cập nhật thành công."
+    },
+    "error": {
+      "required": "Trường này là bắt buộc."
     }
   },
   "exceptions": {

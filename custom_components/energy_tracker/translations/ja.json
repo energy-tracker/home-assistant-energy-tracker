@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "この個人アクセストークンは既に設定されています。各トークンは一度しか使用できません。",
       "reconfigure_successful": "設定が正常に更新されました。"
+    },
+    "error": {
+      "required": "この項目は必須です。"
     }
   },
   "exceptions": {

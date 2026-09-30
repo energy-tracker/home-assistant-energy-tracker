@@ -170,7 +170,7 @@ conditions:
 A: Your token may be invalid. Go to **Settings** → **Devices & Services** → **Energy Tracker** → **Reconfigure** to update your token.
 
 **Q: How do I update my token?**  
-A: Click the **⋮** menu on your Energy Tracker integration and select **Reconfigure**. Leave the token field empty to keep the existing token, or enter a new one.
+A: Click the **⋮** menu on your Energy Tracker integration and select **Reconfigure**. Enter your personal access token. Leading and trailing whitespace is removed. Empty input is rejected and leaves the existing configuration unchanged. Cancel the dialog if you do not want to change the token.
 
 ## Support
 

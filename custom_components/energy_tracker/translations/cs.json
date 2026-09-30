@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Tento osobní přístupový token je již nakonfigurován. Každý token lze použít pouze jednou.",
       "reconfigure_successful": "Konfigurace byla úspěšně aktualizována."
+    },
+    "error": {
+      "required": "Toto pole je povinné."
     }
   },
   "exceptions": {
