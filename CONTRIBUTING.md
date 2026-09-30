@@ -16,6 +16,8 @@ make test
 and the integration's manifest requirements. It checks the resulting environment
 before writing `requirements-dev.lock`; changing the SDK requires updating its
 manifest pin and the development requirement together.
+Ruff configuration and Python targets are synced from that same locked Home Assistant
+release, including when running `make sync-ruff` on its own.
 
 ## Release Process
 
