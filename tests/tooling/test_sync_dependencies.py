@@ -6,7 +6,6 @@ import subprocess
 from unittest.mock import patch
 
 import pytest
-
 from scripts import sync_dependencies
 
 

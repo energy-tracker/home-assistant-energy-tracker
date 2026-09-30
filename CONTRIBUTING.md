@@ -34,6 +34,10 @@ manifest pin and the development requirement together.
 
 ### Core Sync
 
+Integration tests in `tests/` are exported to Core. Repository tooling tests belong
+in `tests/tooling/` and remain in this repository. The sync workflow uses
+`scripts/export_to_core.py`; regression tests check the generated metadata and imports.
+
 1. Commit and push changes
 2. Create and push core tag:
    ```bash
