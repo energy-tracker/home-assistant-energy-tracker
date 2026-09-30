@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import service, translation
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 import voluptuous as vol
@@ -1307,3 +1308,32 @@ async def test_v3_decimal_value_reaches_http_server(
     # Assert
     assert payload["value"] == "9999999999.999999"
     assert received.empty()
+
+
+@pytest.mark.usefixtures("loaded_entry")
+async def test_action_metadata_and_translations(hass: HomeAssistant) -> None:
+    """Expose action fields and translated labels without English text in YAML."""
+    # Arrange
+    prefix = f"component.{DOMAIN}.services.{SERVICE_SEND_METER_READING}"
+
+    # Act
+    descriptions = await service.async_get_all_descriptions(hass)
+    translations = await translation.async_get_translations(
+        hass, "en", "services", {DOMAIN}
+    )
+
+    # Assert
+    fields = descriptions[DOMAIN][SERVICE_SEND_METER_READING]["fields"]
+    assert set(fields) == {
+        "entry_id",
+        "device_id",
+        "source_entity_id",
+        "allow_rounding",
+    }
+    assert fields["entry_id"]["selector"]["config_entry"]["integration"] == DOMAIN
+    assert fields["allow_rounding"]["default"] is True
+    assert translations[f"{prefix}.name"] == "Send meter reading"
+    assert translations[f"{prefix}.description"]
+    for field in fields:
+        assert translations[f"{prefix}.fields.{field}.name"]
+        assert translations[f"{prefix}.fields.{field}.description"]

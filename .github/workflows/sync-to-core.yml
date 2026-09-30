@@ -79,17 +79,26 @@ jobs:
         with:
           python-version-file: core-fork/.python-version
 
-      - name: Export integration and tests for Core
-        run: python scripts/export_to_core.py core-fork
-
-      - name: Generate requirements files
+      - name: Install Core test dependencies
         working-directory: core-fork
         run: |
           python -m venv venv
+          venv/bin/python -m pip install uv
+          venv/bin/python ../scripts/install_core_test_dependencies.py .
+
+      - name: Export integration and tests for Core
+        run: core-fork/venv/bin/python scripts/export_to_core.py core-fork
+
+      - name: Validate exported integration before publishing
+        working-directory: core-fork
+        run: |
           . venv/bin/activate
-          pip install uv
-          uv pip install -r requirements.txt
-          python3 -m script.gen_requirements_all
+          python -m script.translations develop --integration energy_tracker
+          ruff check homeassistant/components/energy_tracker tests/components/energy_tracker
+          ruff format --check homeassistant/components/energy_tracker tests/components/energy_tracker
+          pytest tests/components/energy_tracker -q
+          python -m script.hassfest --action generate
+          python -m script.gen_requirements_all
 
       - name: Create commit
         working-directory: core-fork

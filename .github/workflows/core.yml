@@ -1,0 +1,73 @@
+name: Core Export
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Core dev, 2026.10.0.dev0; pinned so PR checks are reproducible.
+  CORE_REF: 254fb12b5a85d390b779d8388a48803f23aeb2c0
+
+jobs:
+  test:
+    name: Export, lint and test in Core
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check out Home Assistant Core
+        uses: actions/checkout@v7
+        with:
+          repository: home-assistant/core
+          ref: ${{ env.CORE_REF }}
+          path: core
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version-file: core/.python-version
+
+      - name: Install Core test dependencies
+        run: |
+          python -m pip install uv
+          python scripts/install_core_test_dependencies.py core
+
+      - name: Export integration and tests
+        run: python scripts/export_to_core.py core
+
+      - name: Generate English translations
+        working-directory: core
+        run: python -m script.translations develop --integration energy_tracker
+
+      - name: Validate exported metadata
+        working-directory: core
+        # Full quality-tier validation is enforced by sync-to-core before publishing.
+        run: |
+          python -m script.hassfest --integration-path homeassistant/components/energy_tracker --plugins manifest,services,icons,translations,config_flow,json
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          from script.hassfest.quality_scale import SCHEMA
+
+          SCHEMA(yaml.safe_load(Path("homeassistant/components/energy_tracker/quality_scale.yaml").read_text()))
+          PY
+
+      - name: Check exported code with Core rules
+        working-directory: core
+        run: |
+          ruff check homeassistant/components/energy_tracker tests/components/energy_tracker
+          ruff format --check homeassistant/components/energy_tracker tests/components/energy_tracker
+
+      - name: Test exported integration
+        working-directory: core
+        run: pytest tests/components/energy_tracker -q
