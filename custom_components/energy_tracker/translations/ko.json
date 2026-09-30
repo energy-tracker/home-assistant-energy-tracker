@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "예기치 않은 오류가 발생했습니다. 나중에 다시 시도하십시오. ({error})"
     },
-    "device_id_empty": {
-      "message": "표준 측정 장치 ID가 필요합니다."
-    },
     "entity_not_found": {
       "message": "엔티티 {entity_id}를 찾을 수 없습니다."
     },
@@ -72,11 +69,14 @@
     "missing_timestamp": {
       "message": "엔티티 {entity_id}에 타임스탬프가 없습니다."
     },
-    "no_api_token": {
-      "message": "개인 액세스 토큰이 구성되지 않았습니다. 계정 설정을 확인하십시오."
-    },
     "conflict": {
       "message": "이 타임스탬프의 판독값이 이미 존재합니다. ({error})"
+    },
+    "account_unavailable": {
+      "message": "선택한 Energy Tracker 계정을 사용할 수 없습니다. 통합 구성요소 설정을 확인하세요."
+    },
+    "no_api_token": {
+      "message": "개인 액세스 토큰이 구성되지 않았습니다. 계정 설정을 확인하십시오."
     }
   },
   "services": {

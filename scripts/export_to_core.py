@@ -3,8 +3,8 @@
 import argparse
 import ast
 import json
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 
 def remove_custom_test_setup(path: Path) -> None:

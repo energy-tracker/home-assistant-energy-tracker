@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "Váratlan hiba történt. Próbálja meg később. ({error})"
     },
-    "device_id_empty": {
-      "message": "Szabványos mérőeszköz azonosító szükséges."
-    },
     "entity_not_found": {
       "message": "Az {entity_id} entitás nem található."
     },
@@ -72,11 +69,14 @@
     "missing_timestamp": {
       "message": "Az {entity_id} entitásnak nincs időbélyege."
     },
-    "no_api_token": {
-      "message": "Nincs konfigurálva személyes hozzáférési token. Ellenőrizze a fiókbeállításokat."
-    },
     "conflict": {
       "message": "Már létezik mérés ehhez az időbélyeghez. ({error})"
+    },
+    "account_unavailable": {
+      "message": "A kiválasztott Energy Tracker-fiók nem érhető el. Ellenőrizze az integráció beállításait."
+    },
+    "no_api_token": {
+      "message": "Nincs konfigurálva személyes hozzáférési token. Ellenőrizze a fiókbeállításokat."
     }
   },
   "services": {

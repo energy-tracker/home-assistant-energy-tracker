@@ -1,10 +1,10 @@
 """Update development dependencies while preserving manifest requirements."""
 
-from importlib.metadata import version
 import json
-from pathlib import Path
 import subprocess
 import sys
+from importlib.metadata import version
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 LOCKED_PACKAGES = (

@@ -4,18 +4,23 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, ServiceCall, State
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import Event, HomeAssistant, ServiceCall, State
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 import voluptuous as vol
 
 from .api import EnergyTrackerApi
 from .const import CONF_API_TOKEN, DOMAIN, SERVICE_SEND_METER_READING
+from .identity import token_unique_id
 
-type EnergyTrackerConfigEntry = ConfigEntry[str]
+type EnergyTrackerConfigEntry = ConfigEntry[EnergyTrackerApi]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -32,42 +37,41 @@ SERVICE_SEND_METER_READING_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Energy Tracker integration (YAML-based, legacy)."""
-    LOGGER.debug("async_setup called for Energy Tracker (YAML not supported)")
+    """Register the action independently of loaded accounts."""
+
+    async def handle_send_meter_reading(call: ServiceCall) -> None:
+        await async_handle_send_meter_reading(hass, call)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_METER_READING,
+        handle_send_meter_reading,
+        schema=SERVICE_SEND_METER_READING_SCHEMA,
+    )
     return True
 
 
-def _select_token_for_service(hass: HomeAssistant, call: ServiceCall) -> str | None:
-    """Select the API token for a service call.
-
-    Retrieves the API token for the Energy Tracker integration based on the
-    config entry ID provided in the service call data.
-
-    Args:
-        hass: The Home Assistant instance.
-        call: The service call containing the 'entry_id'.
-
-    Returns:
-        The API token as a string if found, otherwise None.
-    """
-    entry_id: str | None = call.data.get("entry_id")
-    if not entry_id:
-        LOGGER.debug("No entry ID provided")
-        return None
-
-    entry: EnergyTrackerConfigEntry | None = hass.config_entries.async_get_entry(
-        entry_id
+def _select_api_for_service(hass: HomeAssistant, call: ServiceCall) -> EnergyTrackerApi:
+    """Select only a loaded Energy Tracker account for a service call."""
+    entry_id = call.data.get("entry_id")
+    entry: EnergyTrackerConfigEntry | None = (
+        hass.config_entries.async_get_entry(entry_id) if entry_id else None
     )
-    if not entry:
-        LOGGER.debug("Integration with ID %s was deleted", entry_id)
-        return None
-
-    token = entry.runtime_data
-    if not token:
-        LOGGER.error("API token not found for entry ID %s", entry_id)
-        return None
-
-    return token
+    if (
+        entry is None
+        or entry.domain != DOMAIN
+        or entry.state is not ConfigEntryState.LOADED
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="account_unavailable",
+        )
+    if not entry.data.get(CONF_API_TOKEN):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_api_token",
+        )
+    return entry.runtime_data
 
 
 async def async_handle_send_meter_reading(
@@ -82,6 +86,7 @@ async def async_handle_send_meter_reading(
     Raises:
         HomeAssistantError: If the meter reading could not be sent.
     """
+    api = _select_api_for_service(hass, call)
     device_id: str = call.data["device_id"].strip()
     source_entity_id: str = call.data["source_entity_id"]
     allow_rounding: bool = call.data.get("allow_rounding", True)
@@ -131,15 +136,6 @@ async def async_handle_send_meter_reading(
         )
     timestamp = state_obj.last_updated
 
-    token = _select_token_for_service(hass, call)
-    if not token:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="no_api_token",
-        )
-
-    api = EnergyTrackerApi(hass=hass, token=token)
-
     await api.send_meter_reading(
         source_entity_id=source_entity_id,
         device_id=device_id,
@@ -149,68 +145,40 @@ async def async_handle_send_meter_reading(
     )
 
 
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: EnergyTrackerConfigEntry
+) -> bool:
+    """Replace legacy plaintext token IDs without changing account references."""
+    if entry.version > 2:
+        return False
+    if entry.version == 1:
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=token_unique_id(entry.data[CONF_API_TOKEN]),
+            version=2,
+            minor_version=1,
+        )
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: EnergyTrackerConfigEntry
 ) -> bool:
-    """Set up the Energy Tracker integration from a config entry.
+    """Create one API client for the lifetime of this loaded account."""
+    api = entry.runtime_data = EnergyTrackerApi(token=entry.data[CONF_API_TOKEN])
 
-    Args:
-        hass: The Home Assistant instance.
-        entry: The configuration entry to set up.
+    async def close_on_stop(event: Event) -> None:
+        await api.async_close()
 
-    Returns:
-        True if setup was successful, False otherwise.
-    """
-    LOGGER.debug("Setting up config entry %s", entry.entry_id)
-
-    entry.runtime_data = entry.data[CONF_API_TOKEN]
-
-    if not hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING):
-
-        async def _handle_send_meter_reading(call: ServiceCall) -> None:
-            await async_handle_send_meter_reading(hass, call)
-
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_SEND_METER_READING,
-            _handle_send_meter_reading,
-            schema=SERVICE_SEND_METER_READING_SCHEMA,
-        )
-        LOGGER.debug("Registered service %s/%s", DOMAIN, SERVICE_SEND_METER_READING)
-
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_on_stop)
+    )
     return True
 
 
 async def async_unload_entry(
     hass: HomeAssistant, entry: EnergyTrackerConfigEntry
 ) -> bool:
-    """Unload a config entry for the Energy Tracker integration.
-
-    Unregisters the service if this was the last loaded config entry.
-
-    Args:
-        hass: The Home Assistant instance.
-        entry: The config entry to unload.
-
-    Returns:
-        True if the unload was successful.
-    """
-    LOGGER.debug("Unloading config entry %s", entry.entry_id)
-
-    # Check if there are other loaded entries for this domain
-    loaded_entries = [
-        e
-        for e in hass.config_entries.async_entries(DOMAIN)
-        if e.entry_id != entry.entry_id and e.state.recoverable
-    ]
-
-    if not loaded_entries:
-        if hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING):
-            hass.services.async_remove(DOMAIN, SERVICE_SEND_METER_READING)
-            LOGGER.debug(
-                "Removed service %s.%s after last config entry was unloaded",
-                DOMAIN,
-                SERVICE_SEND_METER_READING,
-            )
-
+    """Close this account's client while retaining the integration action."""
+    await entry.runtime_data.async_close()
     return True

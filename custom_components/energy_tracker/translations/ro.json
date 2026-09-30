@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "A apărut o eroare neașteptată. Încercați din nou mai târziu. ({error})"
     },
-    "device_id_empty": {
-      "message": "ID-ul dispozitivului de măsurare standard este necesar."
-    },
     "entity_not_found": {
       "message": "Entitatea {entity_id} nu a fost găsită."
     },
@@ -72,11 +69,14 @@
     "missing_timestamp": {
       "message": "Entitatea {entity_id} nu are un timestamp."
     },
-    "no_api_token": {
-      "message": "Niciun token de acces personal nu este configurat. Verificați setările contului."
-    },
     "conflict": {
       "message": "Există deja o citire pentru această marcă temporală. ({error})"
+    },
+    "account_unavailable": {
+      "message": "Contul Energy Tracker selectat nu este disponibil. Verificați setările integrării."
+    },
+    "no_api_token": {
+      "message": "Niciun token de acces personal nu este configurat. Verificați setările contului."
     }
   },
   "services": {

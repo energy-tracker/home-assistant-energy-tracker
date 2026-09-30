@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "Si è verificato un errore imprevisto. Riprova più tardi. ({error})"
     },
-    "device_id_empty": {
-      "message": "L'ID del dispositivo di misurazione standard è richiesto."
-    },
     "entity_not_found": {
       "message": "Entità {entity_id} non trovata."
     },
@@ -72,11 +69,14 @@
     "missing_timestamp": {
       "message": "L'entità {entity_id} non ha un timestamp."
     },
-    "no_api_token": {
-      "message": "Nessun token di accesso personale configurato. Verifica le impostazioni dell'account."
-    },
     "conflict": {
       "message": "Esiste già una lettura per questo timestamp. ({error})"
+    },
+    "account_unavailable": {
+      "message": "L’account Energy Tracker selezionato non è disponibile. Controlla le impostazioni dell’integrazione."
+    },
+    "no_api_token": {
+      "message": "Nessun token di accesso personale configurato. Verifica le impostazioni dell'account."
     }
   },
   "services": {

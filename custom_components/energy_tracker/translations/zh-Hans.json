@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "发生意外错误。请稍后重试。({error})"
     },
-    "device_id_empty": {
-      "message": "需要标准测量设备 ID。"
-    },
     "entity_not_found": {
       "message": "未找到实体 {entity_id}。"
     },
@@ -72,11 +69,14 @@
     "missing_timestamp": {
       "message": "实体 {entity_id} 没有时间戳。"
     },
-    "no_api_token": {
-      "message": "未配置个人访问令牌。请检查账户设置。"
-    },
     "conflict": {
       "message": "此时间戳的读数已存在。({error})"
+    },
+    "account_unavailable": {
+      "message": "所选的 Energy Tracker 账户不可用。请检查集成设置。"
+    },
+    "no_api_token": {
+      "message": "未配置个人访问令牌。请检查账户设置。"
     }
   },
   "services": {

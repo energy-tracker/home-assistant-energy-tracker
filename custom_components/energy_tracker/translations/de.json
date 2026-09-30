@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "Es ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es später erneut. ({error})"
     },
-    "device_id_empty": {
-      "message": "ID des Standardmessgeräts ist erforderlich."
-    },
     "entity_not_found": {
       "message": "Entität {entity_id} nicht gefunden."
     },
@@ -72,11 +69,14 @@
     "missing_timestamp": {
       "message": "Entität {entity_id} hat keinen Zeitstempel."
     },
-    "no_api_token": {
-      "message": "Kein Persönlicher Zugriffstoken konfiguriert. Kontoeinstellungen prüfen."
-    },
     "conflict": {
       "message": "Ein Messwert für diesen Zeitstempel existiert bereits. ({error})"
+    },
+    "account_unavailable": {
+      "message": "Das ausgewählte Energy Tracker-Konto ist nicht verfügbar. Prüfe die Integrationseinstellungen."
+    },
+    "no_api_token": {
+      "message": "Kein Persönlicher Zugriffstoken konfiguriert. Kontoeinstellungen prüfen."
     }
   },
   "services": {

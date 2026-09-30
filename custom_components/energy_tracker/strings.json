@@ -60,9 +60,6 @@
     "unknown_error": {
       "message": "An unexpected error has occurred. Please try again later. ({error})"
     },
-    "device_id_empty": {
-      "message": "Standard measuring device ID is required."
-    },
     "entity_not_found": {
       "message": "Entity {entity_id} not found."
     },
@@ -74,6 +71,9 @@
     },
     "missing_timestamp": {
       "message": "Entity {entity_id} has no timestamp."
+    },
+    "account_unavailable": {
+      "message": "The selected Energy Tracker account is unavailable. Check the integration settings."
     },
     "no_api_token": {
       "message": "No personal access token configured. Check account settings."

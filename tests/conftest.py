@@ -2,9 +2,29 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 pytest_plugins = "pytest_homeassistant_custom_component"
+
+
+@pytest.fixture
+async def start_task():
+    """Start test tasks and clean them up even when an assertion fails."""
+    tasks = []
+
+    def start(coroutine):
+        task = asyncio.create_task(coroutine)
+        tasks.append(task)
+        return task
+
+    try:
+        yield start
+    finally:
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 @pytest.fixture(autouse=True)

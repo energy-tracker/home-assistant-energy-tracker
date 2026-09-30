@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później. ({error})"
     },
-    "device_id_empty": {
-      "message": "Identyfikator standardowego urządzenia pomiarowego jest wymagany."
-    },
     "entity_not_found": {
       "message": "Encja {entity_id} nie została znaleziona."
     },
@@ -72,11 +69,14 @@
     "missing_timestamp": {
       "message": "Encja {entity_id} nie ma znacznika czasu."
     },
-    "no_api_token": {
-      "message": "Nie skonfigurowano osobistego tokena dostępu. Sprawdź ustawienia konta."
-    },
     "conflict": {
       "message": "Odczyt dla tego znacznika czasu już istnieje. ({error})"
+    },
+    "account_unavailable": {
+      "message": "Wybrane konto Energy Tracker jest niedostępne. Sprawdź ustawienia integracji."
+    },
+    "no_api_token": {
+      "message": "Nie skonfigurowano osobistego tokena dostępu. Sprawdź ustawienia konta."
     }
   },
   "services": {

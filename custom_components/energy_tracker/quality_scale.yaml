@@ -5,14 +5,15 @@ integration_type: service
 
 rules:
   # Bronze tier (mandatory)
-  action-setup:
-    status: exempt
-    comment: Integration provides services but does not register custom actions.
+  action-setup: done
 
   async-dependency: done
   brands: done
   config-flow: done
   config-flow-test-coverage: done
+  # The API/SDK needs a non-mutating token check that supports write-only tokens.
+  test-before-configure: todo
+  test-before-setup: todo
 
   entity-event-setup:
     status: exempt

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -22,18 +23,65 @@ import pytest
 from custom_components.energy_tracker.api import EnergyTrackerApi
 
 
+async def test_close_drains_requests_after_cancellation_and_failure(
+    start_task, monkeypatch
+):
+    """Canceled and failed writes must release the client without admitting new ones."""
+    # Arrange
+    entered = asyncio.Queue()
+    release = asyncio.Event()
+
+    async def request(**kwargs):
+        entered.put_nowait(None)
+        await release.wait()
+        raise TimeoutError("Request timed out")
+
+    client = MagicMock()
+    client.meter_readings.create = AsyncMock(side_effect=request)
+    client.close = AsyncMock()
+    monkeypatch.setattr(
+        "custom_components.energy_tracker.api.EnergyTrackerClient",
+        MagicMock(return_value=client),
+    )
+    api = EnergyTrackerApi(token="test-token")
+    data = {
+        "source_entity_id": "sensor.meter",
+        "device_id": "device-123",
+        "value": 123.45,
+        "timestamp": datetime(2026, 1, 1, tzinfo=UTC),
+    }
+    tasks = [start_task(api.send_meter_reading(**data)) for _ in range(2)]
+    await asyncio.wait_for(entered.get(), timeout=5)
+    await asyncio.wait_for(entered.get(), timeout=5)
+
+    # Act
+    close_task = start_task(api.async_close())
+    await asyncio.sleep(0)
+    close_pending_before_cancel = not close_task.done()
+    with pytest.raises(HomeAssistantError) as rejected_call:
+        await api.send_meter_reading(**data)
+    tasks[0].cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await tasks[0]
+    close_pending_after_cancel = not close_task.done()
+    close_calls_while_pending = client.close.await_count
+    release.set()
+    with pytest.raises(HomeAssistantError) as timed_out_call:
+        await tasks[1]
+    await asyncio.wait_for(close_task, timeout=5)
+
+    # Assert
+    assert close_pending_before_cancel
+    assert close_pending_after_cancel
+    assert close_calls_while_pending == 0
+    assert rejected_call.value.translation_key == "account_unavailable"
+    assert timed_out_call.value.translation_key == "timeout"
+    client.close.assert_awaited_once()
+    assert client.meter_readings.create.await_count == 2
+
+
 class TestEnergyTrackerApiInit:
     """Test EnergyTrackerApi initialization."""
-
-    def test_init_stores_hass_and_token(self, hass, api_token):
-        """Test that __init__ stores hass and token."""
-        # Arrange & Act
-        with patch("custom_components.energy_tracker.api.EnergyTrackerClient"):
-            api = EnergyTrackerApi(hass=hass, token=api_token)
-
-        # Assert
-        assert api._hass == hass
-        assert api._token == api_token
 
     def test_init_creates_client(self, hass, api_token):
         """Test that __init__ creates EnergyTrackerClient."""
@@ -41,7 +89,7 @@ class TestEnergyTrackerApiInit:
         with patch(
             "custom_components.energy_tracker.api.EnergyTrackerClient"
         ) as mock_client:
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Assert
             mock_client.assert_called_once_with(access_token=api_token)
@@ -64,7 +112,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock()
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act
             await api.send_meter_reading(
@@ -98,7 +146,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock()
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act
             await api.send_meter_reading(
@@ -131,7 +179,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -164,7 +212,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -191,7 +239,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -218,7 +266,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -246,7 +294,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -279,7 +327,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -309,7 +357,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -336,7 +384,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -363,7 +411,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -392,7 +440,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -425,7 +473,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -441,3 +489,77 @@ class TestSendMeterReading:
                 exc_info.value.translation_placeholders["error"]
                 == "Something went wrong"
             )
+
+
+@pytest.mark.parametrize("first", ["success", "timeout", "cancel"])
+@pytest.mark.parametrize("second", ["success", "timeout", "cancel"])
+@pytest.mark.parametrize("order", [(0, 1), (1, 0)])
+async def test_close_waits_for_every_request_outcome(
+    start_task, monkeypatch, first, second, order
+):
+    """Drain both requests for every success/failure/cancellation completion order."""
+    # Arrange
+    loop = asyncio.get_running_loop()
+    responses = [loop.create_future(), loop.create_future()]
+    entered = asyncio.Queue()
+    outcomes = (first, second)
+
+    async def request(**kwargs):
+        index = int(kwargs["meter_reading"].value) - 1
+        entered.put_nowait(index)
+        await responses[index]
+
+    client = MagicMock()
+    client.meter_readings.create = AsyncMock(side_effect=request)
+    client.close = AsyncMock()
+    monkeypatch.setattr(
+        "custom_components.energy_tracker.api.EnergyTrackerClient",
+        MagicMock(return_value=client),
+    )
+    api = EnergyTrackerApi(token="test-token")
+    calls = [
+        start_task(
+            api.send_meter_reading(
+                source_entity_id="sensor.meter",
+                device_id="device-123",
+                value=index + 1,
+                timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+            )
+        )
+        for index in range(2)
+    ]
+    await asyncio.wait_for(entered.get(), timeout=5)
+    await asyncio.wait_for(entered.get(), timeout=5)
+
+    # Act
+    close = start_task(api.async_close())
+    await asyncio.sleep(0)
+    pending_before_completion = []
+    close_calls_before_completion = []
+    results = [None, None]
+    for index in order:
+        pending_before_completion.append(not close.done())
+        close_calls_before_completion.append(client.close.await_count)
+        if outcomes[index] == "cancel":
+            calls[index].cancel()
+        elif outcomes[index] == "timeout":
+            responses[index].set_exception(TimeoutError("Request timed out"))
+        else:
+            responses[index].set_result(None)
+        results[index] = (await asyncio.gather(calls[index], return_exceptions=True))[0]
+    await asyncio.wait_for(close, timeout=5)
+
+    # Assert
+    assert pending_before_completion == [True, True]
+    assert close_calls_before_completion == [0, 0]
+    expected_types = {
+        "success": type(None),
+        "timeout": HomeAssistantError,
+        "cancel": asyncio.CancelledError,
+    }
+    assert [type(result) for result in results] == [
+        expected_types[first],
+        expected_types[second],
+    ]
+    client.close.assert_awaited_once()
+    assert client.meter_readings.create.await_count == 2

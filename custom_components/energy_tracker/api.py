@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime
 import logging
 
@@ -18,7 +19,6 @@ from energy_tracker_api import (
     TimeoutError,
     ValidationError,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -32,16 +32,19 @@ class EnergyTrackerApi:
     Handles sending meter readings and error translation to Home Assistant exceptions.
     """
 
-    def __init__(self, hass: HomeAssistant, token: str) -> None:
-        """Initialize the EnergyTrackerApi wrapper.
-
-        Args:
-            hass: The Home Assistant instance.
-            token: The Energy Tracker API access token.
-        """
-        self._hass = hass
-        self._token = token
+    def __init__(self, token: str) -> None:
+        """Create the client owned by one loaded configuration entry."""
         self._client = EnergyTrackerClient(access_token=token)
+        self._closed = False
+        self._pending_requests = 0
+        self._idle = asyncio.Event()
+        self._idle.set()
+
+    async def async_close(self) -> None:
+        """Stop accepting readings, drain pending requests, then close the session."""
+        self._closed = True
+        await self._idle.wait()
+        await self._client.close()
 
     async def send_meter_reading(
         self,
@@ -64,11 +67,19 @@ class EnergyTrackerApi:
         Raises:
             HomeAssistantError: If the API request fails.
         """
+        if self._closed:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="account_unavailable",
+            )
+
         meter_reading = CreateMeterReadingDto(
             value=value,
             timestamp=timestamp,
         )
 
+        self._pending_requests += 1
+        self._idle.clear()
         try:
             await self._client.meter_readings.create(
                 device_id=device_id,
@@ -170,3 +181,7 @@ class EnergyTrackerApi:
                 translation_key="unknown_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+        finally:
+            self._pending_requests -= 1
+            if self._pending_requests == 0:
+                self._idle.set()

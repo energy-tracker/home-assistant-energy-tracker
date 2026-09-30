@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde. ({error})"
     },
-    "device_id_empty": {
-      "message": "Se requiere el ID del dispositivo de medición estándar."
-    },
     "entity_not_found": {
       "message": "Entidad {entity_id} no encontrada."
     },
@@ -72,11 +69,14 @@
     "missing_timestamp": {
       "message": "La entidad {entity_id} no tiene marca de tiempo."
     },
-    "no_api_token": {
-      "message": "No hay token de acceso personal configurado. Verifica la configuración de la cuenta."
-    },
     "conflict": {
       "message": "Ya existe una lectura para esta marca de tiempo. ({error})"
+    },
+    "account_unavailable": {
+      "message": "La cuenta de Energy Tracker seleccionada no está disponible. Revisa la configuración de la integración."
+    },
+    "no_api_token": {
+      "message": "No hay token de acceso personal configurado. Verifica la configuración de la cuenta."
     }
   },
   "services": {
