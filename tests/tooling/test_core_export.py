@@ -52,7 +52,7 @@ def test_core_export_contains_only_integration_files(tmp_path: Path) -> None:
     assert "def api_token" in conftest
     assert "def device_id" in conftest
     assert (
-        'patch("homeassistant.components.energy_tracker.api.EnergyTrackerClient")'
+        '"homeassistant.components.energy_tracker.api.EnergyTrackerClient"'
         in (tests / "test_api.py").read_text()
     )
     abort = json.loads((component / "strings.json").read_text())["config"]["abort"]

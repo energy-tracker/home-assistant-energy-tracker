@@ -4,18 +4,22 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.energy_tracker import (
     async_handle_send_meter_reading,
     async_setup,
-    async_setup_entry,
-    async_unload_entry,
 )
+from custom_components.energy_tracker.api import EnergyTrackerApi
 from custom_components.energy_tracker.const import (
     CONF_API_TOKEN,
     DOMAIN,
@@ -33,6 +37,177 @@ def create_service_call(
     return ServiceCall(hass, domain, service, data=data)
 
 
+@pytest.fixture
+def sdk_requests(aioclient_mock):
+    """Mock HTTP requests while retaining real SDK-owned sessions."""
+    with patch("aiohttp.ClientSession._request", new=aioclient_mock.match_request):
+        yield aioclient_mock
+
+
+async def test_client_session_reuse_reload_and_shutdown(hass, sdk_requests):
+    """Reuse the real SDK session and replace it with new credentials on reload."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: "old-token"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    api = entry.runtime_data
+    sdk_requests.post(
+        "https://public-api.energy-tracker.best-ios-apps.de/v1/devices/standard/device-123/meter-readings",
+        status=201,
+    )
+    hass.states.async_set("sensor.meter", "123.45")
+    data = {
+        "entry_id": entry.entry_id,
+        "device_id": "device-123",
+        "source_entity_id": "sensor.meter",
+    }
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
+    )
+    session = api._client._session
+    assert session is not None
+    assert session.headers["Authorization"] == "Bearer old-token"
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
+    )
+    assert entry.runtime_data is api
+    assert api._client._session is session
+    assert not session.closed
+    assert sdk_requests.call_count == 2
+
+    hass.config_entries.async_update_entry(entry, data={CONF_API_TOKEN: "new-token"})
+    with patch.object(api, "async_close", wraps=api.async_close) as close_old:
+        assert await hass.config_entries.async_reload(entry.entry_id)
+        assert session.closed
+        assert entry.runtime_data is not api
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
+        )
+        new_session = entry.runtime_data._client._session
+        assert new_session is not None
+        assert new_session is not session
+        assert new_session.headers["Authorization"] == "Bearer new-token"
+        assert not new_session.closed
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        assert new_session.closed
+        close_old.assert_awaited_once()
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
+            )
+        assert err.value.translation_key == "no_api_token"
+        assert sdk_requests.call_count == 3
+        assert new_session.closed
+
+
+async def test_unloading_one_account_preserves_other_session(hass, sdk_requests):
+    """An account's credentials and session must remain independent of others."""
+    entries = [
+        MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: token})
+        for token in ("first-token", "second-token")
+    ]
+    for entry in entries:
+        entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entries[0].entry_id)
+    await hass.async_block_till_done()
+    sdk_requests.post(
+        "https://public-api.energy-tracker.best-ios-apps.de/v1/devices/standard/device-123/meter-readings",
+        status=201,
+    )
+    hass.states.async_set("sensor.meter", "123.45")
+    data = {"device_id": "device-123", "source_entity_id": "sensor.meter"}
+    for entry in entries:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_METER_READING,
+            {**data, "entry_id": entry.entry_id},
+            blocking=True,
+        )
+    first = entries[0].runtime_data._client._session
+    second = entries[1].runtime_data._client._session
+    assert first is not second
+    assert first.headers["Authorization"] == "Bearer first-token"
+    assert second.headers["Authorization"] == "Bearer second-token"
+
+    assert await hass.config_entries.async_unload(entries[0].entry_id)
+    assert first.closed
+    assert not second.closed
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_METER_READING,
+            {**data, "entry_id": entries[0].entry_id},
+            blocking=True,
+        )
+    assert sdk_requests.call_count == 2
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_METER_READING,
+        {**data, "entry_id": entries[1].entry_id},
+        blocking=True,
+    )
+    assert sdk_requests.call_count == 3
+    assert await hass.config_entries.async_unload(entries[1].entry_id)
+    assert second.closed
+    assert hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
+
+
+@pytest.mark.parametrize(
+    ("domain", "state"),
+    [("other", ConfigEntryState.LOADED)]
+    + [
+        (DOMAIN, state)
+        for state in ConfigEntryState
+        if state is not ConfigEntryState.LOADED
+    ],
+)
+async def test_service_rejects_foreign_or_unloaded_entries(hass, domain, state):
+    """Never access runtime data or send a request for an unavailable account."""
+    entry = MockConfigEntry(domain=domain, state=state, data={})
+    entry.add_to_hass(hass)
+    await async_setup(hass, {})
+    with (
+        patch(
+            "custom_components.energy_tracker.EnergyTrackerApi.send_meter_reading"
+        ) as send,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_METER_READING,
+            {
+                "entry_id": entry.entry_id,
+                "device_id": "device-123",
+                "source_entity_id": "sensor.meter",
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "no_api_token"
+    send.assert_not_called()
+
+
+async def test_empty_token_cannot_send_readings(hass):
+    """Keep rejecting an account without credentials before making requests."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: ""})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_METER_READING,
+            {
+                "entry_id": entry.entry_id,
+                "device_id": "device-123",
+                "source_entity_id": "sensor.meter",
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "no_api_token"
+    assert entry.runtime_data._client._session is None
+
+
 class TestAsyncSetup:
     """Test async_setup function."""
 
@@ -46,13 +221,14 @@ class TestAsyncSetup:
 
         # Assert
         assert result is True
+        assert hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
 
 
 class TestAsyncSetupEntry:
     """Test async_setup_entry function."""
 
-    async def test_setup_entry_stores_token_in_runtime_data(self, hass: HomeAssistant):
-        """Test that setup_entry stores API token in runtime_data."""
+    async def test_setup_entry_stores_client_in_runtime_data(self, hass: HomeAssistant):
+        """Test that setup_entry stores the account client in runtime_data."""
         # Arrange
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -63,11 +239,11 @@ class TestAsyncSetupEntry:
         entry.add_to_hass(hass)
 
         # Act
-        result = await async_setup_entry(hass, entry)
+        result = await hass.config_entries.async_setup(entry.entry_id)
 
         # Assert
         assert result is True
-        assert entry.runtime_data == "test-token-123"
+        assert isinstance(entry.runtime_data, EnergyTrackerApi)
 
     async def test_setup_entry_registers_service_once(self, hass: HomeAssistant):
         """Test that service is registered only once for multiple entries."""
@@ -89,8 +265,8 @@ class TestAsyncSetupEntry:
         entry2.add_to_hass(hass)
 
         # Act
-        await async_setup_entry(hass, entry1)
-        await async_setup_entry(hass, entry2)
+        await hass.config_entries.async_setup(entry1.entry_id)
+        assert entry2.state is ConfigEntryState.LOADED
 
         # Assert
         assert hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
@@ -111,16 +287,16 @@ class TestAsyncUnloadEntry:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         # Act
-        result = await async_unload_entry(hass, entry)
+        result = await hass.config_entries.async_unload(entry.entry_id)
 
         # Assert
         assert result is True
 
-    async def test_unload_last_entry_removes_service(self, hass: HomeAssistant):
-        """Test that unloading last entry removes service."""
+    async def test_unload_last_entry_keeps_service(self, hass: HomeAssistant):
+        """Keep the action available so unloaded accounts get a validation error."""
         # Arrange
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -129,14 +305,14 @@ class TestAsyncUnloadEntry:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
         assert hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
 
         # Act
-        await async_unload_entry(hass, entry)
+        await hass.config_entries.async_unload(entry.entry_id)
 
         # Assert
-        assert not hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
+        assert hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
 
     async def test_unload_one_of_multiple_entries_keeps_service(
         self, hass: HomeAssistant
@@ -159,16 +335,16 @@ class TestAsyncUnloadEntry:
         )
         entry2.add_to_hass(hass)
 
-        await async_setup_entry(hass, entry1)
-        await async_setup_entry(hass, entry2)
+        await hass.config_entries.async_setup(entry1.entry_id)
+        assert entry2.state is ConfigEntryState.LOADED
 
         # Act
-        await async_unload_entry(hass, entry1)
+        await hass.config_entries.async_unload(entry1.entry_id)
 
         # Assert
         assert hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
         # entry2 still has its runtime_data
-        assert entry2.runtime_data == "token-2"
+        assert isinstance(entry2.runtime_data, EnergyTrackerApi)
 
 
 class TestAsyncHandleSendMeterReading:
@@ -184,7 +360,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         # Set up entity state
         hass.states.async_set(
@@ -230,7 +406,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         call = create_service_call(
             hass,
@@ -264,7 +440,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         hass.states.async_set("sensor.energy_meter", STATE_UNAVAILABLE)
 
@@ -302,7 +478,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         hass.states.async_set("sensor.energy_meter", STATE_UNKNOWN)
 
@@ -336,7 +512,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         hass.states.async_set("sensor.energy_meter", "not_a_number")
 
@@ -374,7 +550,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         # Create state with None timestamp
         mock_state = MagicMock()
@@ -408,8 +584,8 @@ class TestAsyncHandleSendMeterReading:
             == "sensor.energy_meter"
         )
 
-    async def test_no_api_token_raises_error(self, hass: HomeAssistant):
-        """Test that missing API token raises localized error."""
+    async def test_unloaded_account_raises_error(self, hass: HomeAssistant):
+        """Test that an unloaded account raises a localized error."""
         # Arrange
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -418,10 +594,9 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
-        # Simulate runtime_data being empty/missing
-        entry.runtime_data = ""
+        await hass.config_entries.async_unload(entry.entry_id)
 
         hass.states.async_set("sensor.energy_meter", "123.45")
 
@@ -478,7 +653,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         hass.states.async_set("sensor.energy_meter", "123.45")
 
@@ -515,7 +690,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         hass.states.async_set("sensor.energy_meter", "123.45")
 
@@ -549,7 +724,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="existing-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         hass.states.async_set("sensor.energy_meter", "123.45")
 
@@ -582,7 +757,7 @@ class TestAsyncHandleSendMeterReading:
             entry_id="test-entry-id",
         )
         entry.add_to_hass(hass)
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
         hass.states.async_set("sensor.energy_meter", "123.45")
 

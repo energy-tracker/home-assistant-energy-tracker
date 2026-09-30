@@ -18,7 +18,6 @@ from energy_tracker_api import (
     TimeoutError,
     ValidationError,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -32,16 +31,15 @@ class EnergyTrackerApi:
     Handles sending meter readings and error translation to Home Assistant exceptions.
     """
 
-    def __init__(self, hass: HomeAssistant, token: str) -> None:
-        """Initialize the EnergyTrackerApi wrapper.
-
-        Args:
-            hass: The Home Assistant instance.
-            token: The Energy Tracker API access token.
-        """
-        self._hass = hass
-        self._token = token
+    def __init__(self, token: str) -> None:
+        """Create the client owned by one loaded configuration entry."""
         self._client = EnergyTrackerClient(access_token=token)
+        self._closed = False
+
+    async def async_close(self) -> None:
+        """Close the HTTP session owned by this client."""
+        self._closed = True
+        await self._client.close()
 
     async def send_meter_reading(
         self,
@@ -64,6 +62,12 @@ class EnergyTrackerApi:
         Raises:
             HomeAssistantError: If the API request fails.
         """
+        if self._closed:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_api_token",
+            )
+
         meter_reading = CreateMeterReadingDto(
             value=value,
             timestamp=timestamp,

@@ -25,23 +25,13 @@ from custom_components.energy_tracker.api import EnergyTrackerApi
 class TestEnergyTrackerApiInit:
     """Test EnergyTrackerApi initialization."""
 
-    def test_init_stores_hass_and_token(self, hass, api_token):
-        """Test that __init__ stores hass and token."""
-        # Arrange & Act
-        with patch("custom_components.energy_tracker.api.EnergyTrackerClient"):
-            api = EnergyTrackerApi(hass=hass, token=api_token)
-
-        # Assert
-        assert api._hass == hass
-        assert api._token == api_token
-
     def test_init_creates_client(self, hass, api_token):
         """Test that __init__ creates EnergyTrackerClient."""
         # Arrange & Act
         with patch(
             "custom_components.energy_tracker.api.EnergyTrackerClient"
         ) as mock_client:
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Assert
             mock_client.assert_called_once_with(access_token=api_token)
@@ -64,7 +54,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock()
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act
             await api.send_meter_reading(
@@ -98,7 +88,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock()
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act
             await api.send_meter_reading(
@@ -131,7 +121,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -164,7 +154,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -191,7 +181,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -218,7 +208,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -246,7 +236,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -279,7 +269,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -309,7 +299,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -336,7 +326,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -363,7 +353,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -392,7 +382,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:
@@ -425,7 +415,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create = AsyncMock(side_effect=error)
             mock_client_class.return_value = mock_client
 
-            api = EnergyTrackerApi(hass=hass, token=api_token)
+            api = EnergyTrackerApi(token=api_token)
 
             # Act & Assert
             with pytest.raises(HomeAssistantError) as exc_info:

@@ -5,9 +5,7 @@ integration_type: service
 
 rules:
   # Bronze tier (mandatory)
-  action-setup:
-    status: exempt
-    comment: Integration provides services but does not register custom actions.
+  action-setup: done
 
   async-dependency: done
   brands: done
