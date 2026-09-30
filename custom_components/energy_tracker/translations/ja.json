@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "選択したEnergy Trackerアカウントは利用できません。インテグレーションの設定を確認してください。"
+    },
+    "no_api_token": {
+      "message": "個人アクセストークンが設定されていません。アカウント設定を確認してください。"
     }
   },
   "services": {

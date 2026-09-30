@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "A conta Energy Tracker selecionada não está disponível. Verifique as configurações da integração."
+    },
+    "no_api_token": {
+      "message": "Nenhum token de acesso pessoal configurado. Verifique as configurações da conta."
     }
   },
   "services": {

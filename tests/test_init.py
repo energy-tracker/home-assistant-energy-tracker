@@ -371,12 +371,11 @@ async def test_service_rejects_foreign_or_unloaded_entries(hass, domain, state):
     send.assert_not_called()
 
 
-async def test_empty_token_cannot_send_readings(hass):
-    """Keep rejecting an account without credentials before making requests."""
+@pytest.mark.parametrize("data", [{}, {CONF_API_TOKEN: ""}])
+async def test_missing_or_empty_token_cannot_send_readings(hass, loaded_entry, data):
+    """Distinguish missing credentials from an unavailable account."""
     # Arrange
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: ""})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    hass.config_entries.async_update_entry(loaded_entry, data=data)
 
     # Act & Assert
     with pytest.raises(ServiceValidationError) as err:
@@ -384,14 +383,14 @@ async def test_empty_token_cannot_send_readings(hass):
             DOMAIN,
             SERVICE_SEND_METER_READING,
             {
-                "entry_id": entry.entry_id,
+                "entry_id": loaded_entry.entry_id,
                 "device_id": "device-123",
                 "source_entity_id": "sensor.meter",
             },
             blocking=True,
         )
-    assert err.value.translation_key == "account_unavailable"
-    assert entry.runtime_data._client._session is None
+    assert err.value.translation_key == "no_api_token"
+    assert loaded_entry.runtime_data._client._session is None
 
 
 class TestAsyncSetup:

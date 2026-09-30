@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "所選的 Energy Tracker 帳戶無法使用。請檢查整合設定。"
+    },
+    "no_api_token": {
+      "message": "未設定個人存取權杖。請檢查帳號設定。"
     }
   },
   "services": {

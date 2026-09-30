@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "A kiválasztott Energy Tracker-fiók nem érhető el. Ellenőrizze az integráció beállításait."
+    },
+    "no_api_token": {
+      "message": "Nincs konfigurálva személyes hozzáférési token. Ellenőrizze a fiókbeállításokat."
     }
   },
   "services": {

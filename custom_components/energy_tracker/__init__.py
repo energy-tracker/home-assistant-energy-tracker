@@ -61,11 +61,15 @@ def _select_api_for_service(hass: HomeAssistant, call: ServiceCall) -> EnergyTra
         entry is None
         or entry.domain != DOMAIN
         or entry.state is not ConfigEntryState.LOADED
-        or not entry.data.get(CONF_API_TOKEN)
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="account_unavailable",
+        )
+    if not entry.data.get(CONF_API_TOKEN):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_api_token",
         )
     return entry.runtime_data
 

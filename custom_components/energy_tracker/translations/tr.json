@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "Seçilen Energy Tracker hesabı kullanılamıyor. Entegrasyon ayarlarını kontrol edin."
+    },
+    "no_api_token": {
+      "message": "Kişisel erişim jetonu yapılandırılmamış. Hesap ayarlarını kontrol edin."
     }
   },
   "services": {

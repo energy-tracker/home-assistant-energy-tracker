@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "Akun Energy Tracker yang dipilih tidak tersedia. Periksa pengaturan integrasi."
+    },
+    "no_api_token": {
+      "message": "Tidak ada token akses pribadi yang dikonfigurasi. Periksa pengaturan akun."
     }
   },
   "services": {

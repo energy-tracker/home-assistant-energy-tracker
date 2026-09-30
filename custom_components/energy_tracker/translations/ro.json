@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "Contul Energy Tracker selectat nu este disponibil. Verificați setările integrării."
+    },
+    "no_api_token": {
+      "message": "Niciun token de acces personal nu este configurat. Verificați setările contului."
     }
   },
   "services": {

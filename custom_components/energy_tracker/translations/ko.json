@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "선택한 Energy Tracker 계정을 사용할 수 없습니다. 통합 구성요소 설정을 확인하세요."
+    },
+    "no_api_token": {
+      "message": "개인 액세스 토큰이 구성되지 않았습니다. 계정 설정을 확인하십시오."
     }
   },
   "services": {

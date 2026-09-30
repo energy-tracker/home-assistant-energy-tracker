@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "所选的 Energy Tracker 账户不可用。请检查集成设置。"
+    },
+    "no_api_token": {
+      "message": "未配置个人访问令牌。请检查账户设置。"
     }
   },
   "services": {

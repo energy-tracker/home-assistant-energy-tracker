@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "Tài khoản Energy Tracker đã chọn không khả dụng. Hãy kiểm tra cài đặt tích hợp."
+    },
+    "no_api_token": {
+      "message": "Chưa cấu hình mã thông báo truy cập cá nhân. Kiểm tra cài đặt tài khoản."
     }
   },
   "services": {

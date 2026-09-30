@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "Den valgte Energy Tracker-kontoen er ikke tilgjengelig. Kontroller integrasjonsinnstillingene."
+    },
+    "no_api_token": {
+      "message": "Ingen personlig tilgangstoken er konfigurert. Kontroller kontoinnstillingene."
     }
   },
   "services": {

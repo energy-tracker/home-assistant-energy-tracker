@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "Valittu Energy Tracker -tili ei ole käytettävissä. Tarkista integraation asetukset."
+    },
+    "no_api_token": {
+      "message": "Henkilökohtaista käyttöoikeustunnusta ei ole määritetty. Tarkista tiliasetukset."
     }
   },
   "services": {

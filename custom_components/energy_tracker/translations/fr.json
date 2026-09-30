@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "Le compte Energy Tracker sélectionné est indisponible. Vérifiez les paramètres de l’intégration."
+    },
+    "no_api_token": {
+      "message": "Aucun jeton d'accès personnel configuré. Vérifiez les paramètres du compte."
     }
   },
   "services": {

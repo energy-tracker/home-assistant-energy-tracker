@@ -74,6 +74,9 @@
     },
     "account_unavailable": {
       "message": "Vybraný účet Energy Tracker není dostupný. Zkontrolujte nastavení integrace."
+    },
+    "no_api_token": {
+      "message": "Není nakonfigurován osobní přístupový token. Zkontrolujte nastavení účtu."
     }
   },
   "services": {
