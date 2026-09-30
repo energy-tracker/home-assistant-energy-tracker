@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "เกิดข้อผิดพลาดที่ไม่คาดคิด ลองอีกครั้งในภายหลัง ({error})"
     },
-    "device_id_empty": {
-      "message": "ต้องการ ID อุปกรณ์วัดมาตรฐาน"
-    },
     "entity_not_found": {
       "message": "ไม่พบเอนทิตี {entity_id}"
     },
@@ -72,11 +69,11 @@
     "missing_timestamp": {
       "message": "เอนทิตี {entity_id} ไม่มีการประทับเวลา"
     },
-    "no_api_token": {
-      "message": "ไม่ได้กำหนดค่าโทเค็นการเข้าถึงส่วนตัว ตรวจสอบการตั้งค่าบัญชี"
-    },
     "conflict": {
       "message": "มีการอ่านค่าสำหรับประทับเวลานี้อยู่แล้ว ({error})"
+    },
+    "account_unavailable": {
+      "message": "บัญชี Energy Tracker ที่เลือกไม่พร้อมใช้งาน โปรดตรวจสอบการตั้งค่าการผสานรวม"
     }
   },
   "services": {

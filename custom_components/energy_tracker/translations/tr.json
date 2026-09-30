@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "Beklenmeyen bir hata oluştu. Daha sonra tekrar deneyin. ({error})"
     },
-    "device_id_empty": {
-      "message": "Standart ölçüm cihazı kimliği gereklidir."
-    },
     "entity_not_found": {
       "message": "Varlık {entity_id} bulunamadı."
     },
@@ -72,11 +69,11 @@
     "missing_timestamp": {
       "message": "Varlık {entity_id} için zaman damgası yok."
     },
-    "no_api_token": {
-      "message": "Kişisel erişim jetonu yapılandırılmamış. Hesap ayarlarını kontrol edin."
-    },
     "conflict": {
       "message": "Bu zaman damgası için bir okuma zaten mevcut. ({error})"
+    },
+    "account_unavailable": {
+      "message": "Seçilen Energy Tracker hesabı kullanılamıyor. Entegrasyon ayarlarını kontrol edin."
     }
   },
   "services": {

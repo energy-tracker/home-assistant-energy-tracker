@@ -74,7 +74,7 @@ async def test_close_drains_requests_after_cancellation_and_failure(
     assert close_pending_before_cancel
     assert close_pending_after_cancel
     assert close_calls_while_pending == 0
-    assert rejected_call.value.translation_key == "no_api_token"
+    assert rejected_call.value.translation_key == "account_unavailable"
     assert timed_out_call.value.translation_key == "timeout"
     client.close.assert_awaited_once()
     assert client.meter_readings.create.await_count == 2

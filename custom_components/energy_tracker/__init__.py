@@ -18,6 +18,7 @@ import voluptuous as vol
 
 from .api import EnergyTrackerApi
 from .const import CONF_API_TOKEN, DOMAIN, SERVICE_SEND_METER_READING
+from .identity import token_unique_id
 
 type EnergyTrackerConfigEntry = ConfigEntry[EnergyTrackerApi]
 
@@ -64,7 +65,7 @@ def _select_api_for_service(hass: HomeAssistant, call: ServiceCall) -> EnergyTra
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="no_api_token",
+            translation_key="account_unavailable",
         )
     return entry.runtime_data
 
@@ -138,6 +139,22 @@ async def async_handle_send_meter_reading(
         timestamp=timestamp,
         allow_rounding=allow_rounding,
     )
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: EnergyTrackerConfigEntry
+) -> bool:
+    """Replace legacy plaintext token IDs without changing account references."""
+    if entry.version > 2:
+        return False
+    if entry.version == 1:
+        hass.config_entries.async_update_entry(
+            entry,
+            unique_id=token_unique_id(entry.data[CONF_API_TOKEN]),
+            version=2,
+            minor_version=1,
+        )
+    return True
 
 
 async def async_setup_entry(

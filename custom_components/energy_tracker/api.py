@@ -70,7 +70,7 @@ class EnergyTrackerApi:
         if self._closed:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="no_api_token",
+                translation_key="account_unavailable",
             )
 
         meter_reading = CreateMeterReadingDto(

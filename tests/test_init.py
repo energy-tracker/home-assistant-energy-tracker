@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
+from hashlib import sha256
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import web
@@ -295,7 +296,7 @@ async def test_stopped_client_rejects_readings(
         await hass.services.async_call(
             DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
         )
-    assert err.value.translation_key == "no_api_token"
+    assert err.value.translation_key == "account_unavailable"
     assert sdk_requests.call_count == 1
     assert open_session.closed
 
@@ -366,7 +367,7 @@ async def test_service_rejects_foreign_or_unloaded_entries(hass, domain, state):
             },
             blocking=True,
         )
-    assert err.value.translation_key == "no_api_token"
+    assert err.value.translation_key == "account_unavailable"
     send.assert_not_called()
 
 
@@ -389,7 +390,7 @@ async def test_empty_token_cannot_send_readings(hass):
             },
             blocking=True,
         )
-    assert err.value.translation_key == "no_api_token"
+    assert err.value.translation_key == "account_unavailable"
     assert entry.runtime_data._client._session is None
 
 
@@ -802,7 +803,7 @@ class TestAsyncHandleSendMeterReading:
             await async_handle_send_meter_reading(hass, call)
 
         assert exc_info.value.translation_domain == DOMAIN
-        assert exc_info.value.translation_key == "no_api_token"
+        assert exc_info.value.translation_key == "account_unavailable"
 
     async def test_deleted_integration_raises_error(self, hass: HomeAssistant):
         """Test that deleted integration entry raises localized error."""
@@ -826,7 +827,7 @@ class TestAsyncHandleSendMeterReading:
             await async_handle_send_meter_reading(hass, call)
 
         assert exc_info.value.translation_domain == DOMAIN
-        assert exc_info.value.translation_key == "no_api_token"
+        assert exc_info.value.translation_key == "account_unavailable"
 
     async def test_device_id_whitespace_stripped(self, hass: HomeAssistant):
         """Test that device_id whitespace is properly stripped."""
@@ -896,7 +897,7 @@ class TestAsyncHandleSendMeterReading:
             await async_handle_send_meter_reading(hass, call)
 
         assert exc_info.value.translation_domain == DOMAIN
-        assert exc_info.value.translation_key == "no_api_token"
+        assert exc_info.value.translation_key == "account_unavailable"
 
     async def test_deleted_entry_logs_debug(self, hass: HomeAssistant):
         """Test that deleted integration logs debug message."""
@@ -930,7 +931,7 @@ class TestAsyncHandleSendMeterReading:
             await async_handle_send_meter_reading(hass, call)
 
         assert exc_info.value.translation_domain == DOMAIN
-        assert exc_info.value.translation_key == "no_api_token"
+        assert exc_info.value.translation_key == "account_unavailable"
 
     async def test_service_wrapper_function(self, hass: HomeAssistant):
         """Test that registered service wrapper calls handler correctly."""
@@ -969,3 +970,53 @@ class TestAsyncHandleSendMeterReading:
         call_kwargs = mock_send.call_args.kwargs
         assert call_kwargs["device_id"] == "device-123"
         assert call_kwargs["value"] == 123.45
+
+
+async def test_setup_migrates_legacy_token_id(hass):
+    """Migrate through HA while preserving service references and account data."""
+    # Arrange
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Existing account",
+        unique_id="secret-token",
+        data={CONF_API_TOKEN: "secret-token"},
+        options={"preserved": True},
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    entry_id = entry.entry_id
+
+    # Act
+    loaded = await hass.config_entries.async_setup(entry_id)
+
+    # Assert
+    assert loaded
+    assert entry.version == 2
+    assert entry.minor_version == 1
+    assert entry.unique_id == sha256(b"secret-token").hexdigest()
+    assert "secret-token" not in repr(entry)
+    assert entry.entry_id == entry_id
+    assert entry.title == "Existing account"
+    assert entry.data == {CONF_API_TOKEN: "secret-token"}
+    assert entry.options == {"preserved": True}
+
+
+async def test_migration_does_not_downgrade_future_entry(hass):
+    """An older integration must not rewrite an unknown future entry format."""
+    # Arrange
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_TOKEN: "secret-token"},
+        unique_id="future-id",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    # Act
+    loaded = await hass.config_entries.async_setup(entry.entry_id)
+
+    # Assert
+    assert not loaded
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.version == 3
+    assert entry.unique_id == "future-id"

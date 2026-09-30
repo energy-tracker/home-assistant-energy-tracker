@@ -11,6 +11,9 @@ rules:
   brands: done
   config-flow: done
   config-flow-test-coverage: done
+  # The API/SDK needs a non-mutating token check that supports write-only tokens.
+  test-before-configure: todo
+  test-before-setup: todo
 
   entity-event-setup:
     status: exempt

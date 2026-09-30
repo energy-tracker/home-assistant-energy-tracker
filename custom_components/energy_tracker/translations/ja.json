@@ -57,9 +57,6 @@
     "unknown_error": {
       "message": "予期しないエラーが発生しました。後でもう一度お試しください。({error})"
     },
-    "device_id_empty": {
-      "message": "標準測定デバイス ID が必要です。"
-    },
     "entity_not_found": {
       "message": "エンティティ {entity_id} が見つかりません。"
     },
@@ -72,11 +69,11 @@
     "missing_timestamp": {
       "message": "エンティティ {entity_id} にタイムスタンプがありません。"
     },
-    "no_api_token": {
-      "message": "個人アクセストークンが設定されていません。アカウント設定を確認してください。"
-    },
     "conflict": {
       "message": "このタイムスタンプの読み取り値はすでに存在します。({error})"
+    },
+    "account_unavailable": {
+      "message": "選択したEnergy Trackerアカウントは利用できません。インテグレーションの設定を確認してください。"
     }
   },
   "services": {

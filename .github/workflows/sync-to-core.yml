@@ -61,19 +61,18 @@ jobs:
           git merge --ff-only upstream/dev
           git push origin dev
 
-      - name: Create or update branch from dev
+      - name: Create new export branch from dev
         working-directory: core-fork
         env:
           VERSION: ${{ steps.tag.outputs.VERSION }}
         run: |
-          # Check if branch exists remotely
-          if git ls-remote --heads origin "energy-tracker-$VERSION" | grep -q "energy-tracker-$VERSION"; then
-            echo "Branch exists, will update it"
-            git checkout -B "energy-tracker-$VERSION" origin/dev
-          else
-            echo "Creating new branch"
-            git checkout -b "energy-tracker-$VERSION" origin/dev
+          BRANCH="energy-tracker-$VERSION"
+          EXISTING=$(git ls-remote --heads origin "refs/heads/$BRANCH")
+          if [ -n "$EXISTING" ]; then
+            echo "::error::Export branch $BRANCH already exists; refusing to overwrite it."
+            exit 1
           fi
+          git checkout -b "$BRANCH" origin/dev
 
       - name: Set up Python for Core
         uses: actions/setup-python@v7
@@ -112,7 +111,5 @@ jobs:
         env:
           VERSION: ${{ steps.tag.outputs.VERSION }}
         run: |
-          # Force push to update existing branch (if PR exists) or push new branch
-          git push --force origin "energy-tracker-$VERSION"
+          git push origin "energy-tracker-$VERSION"
           echo "✅ Branch energy-tracker-$VERSION pushed to energy-tracker/core"
-          echo "Existing PR will be automatically updated with new commits"
