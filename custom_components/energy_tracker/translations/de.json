@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Dieser Persönliche Zugriffstoken ist bereits konfiguriert. Jeder Token kann nur einmal verwendet werden.",
       "reconfigure_successful": "Konfiguration erfolgreich aktualisiert."
+    },
+    "error": {
+      "required": "Dieses Feld ist erforderlich."
     }
   },
   "exceptions": {

@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Denna personliga åtkomsttoken är redan konfigurerad. Varje token kan endast användas en gång.",
       "reconfigure_successful": "Konfigurationen har uppdaterats."
+    },
+    "error": {
+      "required": "Detta fält är obligatoriskt."
     }
   },
   "exceptions": {

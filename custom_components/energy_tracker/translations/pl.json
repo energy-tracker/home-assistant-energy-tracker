@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Ten osobisty token dostępu jest już skonfigurowany. Każdy token może być użyty tylko raz.",
       "reconfigure_successful": "Konfiguracja została pomyślnie zaktualizowana."
+    },
+    "error": {
+      "required": "To pole jest wymagane."
     }
   },
   "exceptions": {

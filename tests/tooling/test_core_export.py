@@ -47,6 +47,8 @@ def test_core_export_contains_only_integration_files(tmp_path: Path) -> None:
     flow = (component / "config_flow.py").read_text()
     assert "class EnergyTrackerConfigFlow(ConfigFlow, domain=DOMAIN)" in flow
     assert "-> ConfigFlowResult:" in flow
+    assert "from homeassistant.data_entry_flow import AbortFlow\n" in flow
+    assert "AbortFlow, FlowResult" not in flow
     conftest = (tests / "conftest.py").read_text()
     assert "auto_enable_custom_integrations" not in conftest
     assert "def api_token" in conftest

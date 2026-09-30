@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Tämä henkilökohtainen käyttöoikeustunnus on jo määritetty. Jokaista tunnusta voidaan käyttää vain kerran.",
       "reconfigure_successful": "Kokoonpano on päivitetty onnistuneesti."
+    },
+    "error": {
+      "required": "Tämä kenttä on pakollinen."
     }
   },
   "exceptions": {

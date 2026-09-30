@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Token akses pribadi ini sudah dikonfigurasi. Setiap token hanya dapat digunakan sekali.",
       "reconfigure_successful": "Konfigurasi berhasil diperbarui."
+    },
+    "error": {
+      "required": "Kolom ini wajib diisi."
     }
   },
   "exceptions": {

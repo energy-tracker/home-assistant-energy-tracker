@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Dit persoonlijke toegangstoken is al geconfigureerd. Elk token kan slechts één keer worden gebruikt.",
       "reconfigure_successful": "Configuratie succesvol bijgewerkt."
+    },
+    "error": {
+      "required": "Dit veld is verplicht."
     }
   },
   "exceptions": {

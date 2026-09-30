@@ -27,6 +27,9 @@
     "abort": {
       "already_configured": "Ez a személyes hozzáférési token már konfigurálva van. Minden token csak egyszer használható.",
       "reconfigure_successful": "A konfiguráció sikeresen frissítve."
+    },
+    "error": {
+      "required": "Ez a mező kötelező."
     }
   },
   "exceptions": {
