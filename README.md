@@ -4,17 +4,16 @@
 [![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![License](https://img.shields.io/github/license/energy-tracker/home-assistant-energy-tracker.svg)](LICENSE)
 
-Send meter readings from Home Assistant sensors automatically to your [Energy Tracker](https://www.energy-tracker.best-ios-apps.de) account.
+Send meter readings from Home Assistant sensors to your [Energy Tracker](https://www.energy-tracker.best-ios-apps.de) account using an action or automation.
 
 ## Features
 
-- ✅ **Config Flow Setup**: Easy configuration through the Home Assistant UI
-- ✅ **Multi-Account Support**: Connect multiple Energy Tracker accounts
-- ✅ **Automated Meter Readings**: Send sensor values automatically via automations
-- ✅ **Optional Value Rounding**: Automatic rounding to match your meter's precision
-- ✅ **Full Localization**: 26 languages supported
-- ✅ **Comprehensive Error Handling**: Clear error messages and repair flows
-- ✅ **Cloud Integration**: Direct API connection to Energy Tracker service
+- Configure multiple accounts through the Home Assistant UI.
+- Send readings to standard measuring devices on demand or through automations.
+- Optionally round readings to the meter's configured precision.
+- Receive translated error messages when an action fails.
+
+The integration does not create entities or retrieve readings from Energy Tracker.
 
 ## Installation
 
@@ -26,12 +25,9 @@ Requires **Home Assistant 2026.3.1 or newer** (Python 3.14.2+).
 
 #### Option A: Via HACS (Recommended)
 
-1. Open [HACS](https://hacs.xyz/) in Home Assistant
-2. Go to **Integrations**
-3. Click **+ Explore & Download Repositories**
-4. Search for "Energy Tracker"
-5. Click **Download**
-6. Restart Home Assistant
+1. Open [HACS](https://hacs.xyz/) in Home Assistant.
+2. Search for **Energy Tracker** and download the integration.
+3. Restart Home Assistant.
 
 #### Option B: Manual Installation
 
@@ -44,18 +40,18 @@ Requires **Home Assistant 2026.3.1 or newer** (Python 3.14.2+).
 Before configuring, you need an API token from your [Energy Tracker account](https://www.energy-tracker.best-ios-apps.de):
 
 1. Log in at [www.energy-tracker.best-ios-apps.de](https://www.energy-tracker.best-ios-apps.de)
-2. Navigate to **API** → **Access Tokens**
-3. Create a new **Personal Access Token**
-4. Copy the token
+2. Navigate to **API** > **Access Tokens**.
+3. Select **Generate token** and grant **Create or update meter readings** (`write:meter-reading`). An existing token with the broader `meter-reading` permission also works.
+4. Copy the token. It is only shown once. Paste the token itself into Home Assistant, without a `Bearer` prefix.
 
 Then in Home Assistant:
 
-1. Go to **Settings** → **Devices & Services**
-2. Click **+ Add Integration**
-3. Search for "Energy Tracker"
-4. Enter a name for this account (e.g., "My Energy Tracker")
-5. Paste your personal access token
-6. Click **Submit**
+1. Go to **Settings** > **Devices & services**.
+2. Select **Add integration** and search for **Energy Tracker**.
+3. Enter an **Account name** and your **Personal access token**.
+4. Select **Submit**.
+
+Repeat these steps to configure another token. Each token can only be configured once.
 
 ### Step 3: Get Your Standard Measuring Device ID
 
@@ -64,16 +60,18 @@ You need the device ID to send meter readings. There are two ways to get it:
 #### Option A: Via Energy Tracker Web Interface
 
 1. Log into your Energy Tracker account
-2. Go to your device details
-3. Copy the **Standard Measuring Device ID** 
-4. **Important**: Remove the `std-` prefix! The ID should be in UUID format like `deadbeef-dead-beef-dead-beefdeadbeef`
+2. Open the standard device's settings and select **Overview**.
+3. Copy the **Device Identifier**.
+4. Remove the `std-` prefix. The ID should be in UUID format, like `deadbeef-dead-beef-dead-beefdeadbeef`.
 
-#### Option B: Via API (Recommended)
+#### Option B: Via API
 
 1. Log into your Energy Tracker account
 2. Navigate to **API** → **Documentation**
 3. Use the API endpoint to retrieve your devices
 4. The IDs returned are already in the correct format (without `std-` prefix)
+
+Listing devices through the API requires `read:measuring-device` or `measuring-device` permission. That permission is not needed to send readings when you already know the device ID.
 
 ## Usage
 
@@ -81,12 +79,11 @@ This integration provides a service only — no entities are created. Create an 
 
 ### Step 4: Create an Automation
 
-1. Go to **Settings** → **Automations & Scenes**
-2. Click **+ Create Automation**
-3. Add a **Trigger** (e.g., time-based: daily at 23:55)
-4. Click **Add action** and search for **Energy Tracker: Send meter reading**
-5. Fill in the required fields
-6. Save the automation
+1. Go to **Settings** > **Automations & scenes** and create an automation.
+2. Add a time trigger, for example daily at 23:55.
+3. Add the **Energy Tracker: Send meter reading** action.
+4. Select the **Account**, enter the **Standard measuring device ID**, and select the **Sensor** providing the reading.
+5. Choose whether to **Allow rounding**, then save the automation.
 
 ## Reference
 
@@ -106,18 +103,19 @@ to the meter’s configured precision.
 
 ### Example Automation (YAML)
 
+For the automation editor's **Edit in YAML** view, use the following example. Replace `YOUR_CONFIG_ENTRY_ID` with the account's `entry_id` shown when you select the account in the visual action editor and switch to YAML. Replace the device and sensor IDs with your own.
+
 ```yaml
-- alias: "Send daily electricity reading"
-  triggers:
-    - trigger: time
-      at: "23:55:00"
-  actions:
-    - action: energy_tracker.send_meter_reading
-      data:
-        entry_id: <select from dropdown>
-        device_id: "deadbeef-dead-beef-dead-beefdeadbeef"
-        source_entity_id: <select from dropdown>
-        allow_rounding: true
+alias: "Send daily electricity reading"
+triggers:
+  - trigger: time
+    at: "23:55:00"
+actions:
+  - action: energy_tracker.send_meter_reading
+    data:
+      entry_id: "YOUR_CONFIG_ENTRY_ID"
+      device_id: "deadbeef-dead-beef-dead-beefdeadbeef"
+      source_entity_id: sensor.electricity_meter
 ```
 
 ### Supported Entity Types
@@ -136,7 +134,9 @@ The integration accepts meter readings from:
 
 ## Error Handling
 
-The integration provides comprehensive error handling with localized error messages.
+Action failures produce translated error messages. Requests are not automatically retried.
+
+The reading uses the source entity's `last_updated` timestamp. Sending an unchanged source again can produce a conflict when a reading already exists for that timestamp.
 
 ## Troubleshooting
 
@@ -167,10 +167,20 @@ conditions:
 ```
 
 **Q: Integration shows authentication error after setup**  
-A: Your token may be invalid. Go to **Settings** → **Devices & Services** → **Energy Tracker** → **Reconfigure** to update your token.
+A: Authentication is checked when a reading is sent. Verify that the token is valid and has `write:meter-reading` or `meter-reading` permission. Go to **Settings** > **Devices & services** > **Energy Tracker**, open the account's **⋮** menu, and select **Reconfigure** to replace the token.
 
 **Q: How do I update my token?**  
 A: Click the **⋮** menu on your Energy Tracker integration and select **Reconfigure**. Enter your personal access token. Leading and trailing whitespace is removed. Empty input is rejected and leaves the existing configuration unchanged. Cancel the dialog if you do not want to change the token.
+
+## Removing an account or the integration
+
+1. Disable or update automations and scripts that send readings through the account you want to remove.
+2. Go to **Settings** > **Devices & services** > **Energy Tracker**.
+3. Open the account's **⋮** menu and select **Delete**.
+
+Removing an account stops sending readings through that account. It does not delete readings stored in Energy Tracker or revoke its access token. Revoke the token in Energy Tracker if it is no longer needed.
+
+To uninstall the integration completely, remove all its accounts first, then remove it through HACS and restart Home Assistant. For a manual installation, remove `config/custom_components/energy_tracker/` instead and restart Home Assistant.
 
 ## Support
 
