@@ -12,6 +12,11 @@ make install
 make test
 ```
 
+`make sync-deps` updates development dependencies within `requirements-dev.txt`
+and the integration's manifest requirements. It checks the resulting environment
+before writing `requirements-dev.lock`; changing the SDK requires updating its
+manifest pin and the development requirement together.
+
 ## Release Process
 
 ### HACS Release
