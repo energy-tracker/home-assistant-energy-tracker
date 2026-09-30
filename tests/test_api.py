@@ -23,65 +23,61 @@ import pytest
 from custom_components.energy_tracker.api import EnergyTrackerApi
 
 
-async def test_close_drains_requests_after_cancellation_and_failure():
+async def test_close_drains_requests_after_cancellation_and_failure(
+    start_task, monkeypatch
+):
     """Canceled and failed writes must release the client without admitting new ones."""
     # Arrange
-    entered = asyncio.Event()
+    entered = asyncio.Queue()
     release = asyncio.Event()
-    started = 0
 
     async def request(**kwargs):
-        nonlocal started
-        started += 1
-        if started == 2:
-            entered.set()
+        entered.put_nowait(None)
         await release.wait()
         raise TimeoutError("Request timed out")
 
-    with patch("custom_components.energy_tracker.api.EnergyTrackerClient") as client:
-        client.return_value.meter_readings.create = AsyncMock(side_effect=request)
-        client.return_value.close = AsyncMock()
-        api = EnergyTrackerApi(token="test-token")
-        data = {
-            "source_entity_id": "sensor.meter",
-            "device_id": "device-123",
-            "value": 123.45,
-            "timestamp": datetime(2026, 1, 1, tzinfo=UTC),
-        }
-        tasks = [asyncio.create_task(api.send_meter_reading(**data)) for _ in range(2)]
-        close_task = None
-        try:
-            await asyncio.wait_for(entered.wait(), timeout=5)
+    client = MagicMock()
+    client.meter_readings.create = AsyncMock(side_effect=request)
+    client.close = AsyncMock()
+    monkeypatch.setattr(
+        "custom_components.energy_tracker.api.EnergyTrackerClient",
+        MagicMock(return_value=client),
+    )
+    api = EnergyTrackerApi(token="test-token")
+    data = {
+        "source_entity_id": "sensor.meter",
+        "device_id": "device-123",
+        "value": 123.45,
+        "timestamp": datetime(2026, 1, 1, tzinfo=UTC),
+    }
+    tasks = [start_task(api.send_meter_reading(**data)) for _ in range(2)]
+    await asyncio.wait_for(entered.get(), timeout=5)
+    await asyncio.wait_for(entered.get(), timeout=5)
 
-            # Act
-            close_task = asyncio.create_task(api.async_close())
-            await asyncio.sleep(0)
-            close_pending_before_cancel = not close_task.done()
-            with pytest.raises(HomeAssistantError) as rejected_call:
-                await api.send_meter_reading(**data)
-            tasks[0].cancel()
-            with pytest.raises(asyncio.CancelledError):
-                await tasks[0]
-            close_pending_after_cancel = not close_task.done()
-            close_calls_while_pending = client.return_value.close.await_count
-            release.set()
-            with pytest.raises(HomeAssistantError) as timed_out_call:
-                await tasks[1]
-            await asyncio.wait_for(close_task, timeout=5)
+    # Act
+    close_task = start_task(api.async_close())
+    await asyncio.sleep(0)
+    close_pending_before_cancel = not close_task.done()
+    with pytest.raises(HomeAssistantError) as rejected_call:
+        await api.send_meter_reading(**data)
+    tasks[0].cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await tasks[0]
+    close_pending_after_cancel = not close_task.done()
+    close_calls_while_pending = client.close.await_count
+    release.set()
+    with pytest.raises(HomeAssistantError) as timed_out_call:
+        await tasks[1]
+    await asyncio.wait_for(close_task, timeout=5)
 
-            # Assert
-            assert close_pending_before_cancel
-            assert close_pending_after_cancel
-            assert close_calls_while_pending == 0
-            assert rejected_call.value.translation_key == "no_api_token"
-            assert timed_out_call.value.translation_key == "timeout"
-            client.return_value.close.assert_awaited_once()
-            assert started == 2
-        finally:
-            release.set()
-            await asyncio.gather(*tasks, return_exceptions=True)
-            if close_task:
-                await close_task
+    # Assert
+    assert close_pending_before_cancel
+    assert close_pending_after_cancel
+    assert close_calls_while_pending == 0
+    assert rejected_call.value.translation_key == "no_api_token"
+    assert timed_out_call.value.translation_key == "timeout"
+    client.close.assert_awaited_once()
+    assert client.meter_readings.create.await_count == 2
 
 
 class TestEnergyTrackerApiInit:

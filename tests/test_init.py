@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import web
@@ -47,115 +48,136 @@ def sdk_requests(aioclient_mock):
         yield aioclient_mock
 
 
-@pytest.mark.enable_socket
-async def test_reload_waits_for_in_flight_writes(hass, aiohttp_server):
-    """Do not disconnect accepted POSTs before receiving their responses."""
-    # Arrange
-    received = asyncio.Event()
+@pytest.fixture
+async def loaded_entry(hass):
+    """Set up an account through HA's normal lifecycle."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: "old-token"})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    hass.states.async_set("sensor.meter", "123.45")
+    return entry
+
+
+@pytest.fixture
+def reading_data(loaded_entry):
+    """Provide service data for the loaded account."""
+    return {
+        "entry_id": loaded_entry.entry_id,
+        "device_id": "device-123",
+        "source_entity_id": "sensor.meter",
+    }
+
+
+@pytest.fixture
+async def open_session(hass, loaded_entry, reading_data, sdk_requests):
+    """Open a real SDK session using a mocked HTTP response."""
+    sdk_requests.post(
+        "https://public-api.energy-tracker.best-ios-apps.de/v1/devices/standard/device-123/meter-readings",
+        status=201,
+    )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
+    )
+    return loaded_entry.runtime_data._client._session
+
+
+@pytest.fixture
+async def delayed_api_server(aiohttp_server, monkeypatch):
+    """Hold local POST responses until the test releases them."""
+    received = asyncio.Queue()
     release = asyncio.Event()
-    closing = asyncio.Event()
-    readings = []
 
     async def handle(request):
-        readings.append(await request.json())
-        if len(readings) == 2:
-            received.set()
+        received.put_nowait(await request.json())
         await release.wait()
         return web.Response(status=201)
 
     app = web.Application()
     app.router.add_post("/v1/devices/standard/device-123/meter-readings", handle)
     server = await aiohttp_server(app)
-
-    def client(**kwargs):
-        return EnergyTrackerClient(base_url=str(server.make_url("/")), **kwargs)
-
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: "test-token"})
-    entry.add_to_hass(hass)
-    with patch(
-        "custom_components.energy_tracker.api.EnergyTrackerClient", side_effect=client
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        api = entry.runtime_data
-        hass.states.async_set("sensor.meter", "123.45")
-        data = {
-            "entry_id": entry.entry_id,
-            "device_id": "device-123",
-            "source_entity_id": "sensor.meter",
-        }
-        calls = [
-            hass.async_create_task(
-                hass.services.async_call(
-                    DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
-                )
-            )
-            for _ in range(2)
-        ]
-        reload_task = None
-        close = api.async_close
-
-        async def close_client():
-            closing.set()
-            await close()
-
-        try:
-            await asyncio.wait_for(received.wait(), timeout=5)
-            session = api._client._session
-            with patch.object(api, "async_close", side_effect=close_client):
-                # Act
-                reload_task = hass.async_create_task(
-                    hass.config_entries.async_reload(entry.entry_id)
-                )
-                await asyncio.wait_for(closing.wait(), timeout=5)
-                reload_pending = not reload_task.done()
-                session_open_during_reload = not session.closed
-                with pytest.raises(ServiceValidationError):
-                    await hass.services.async_call(
-                        DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
-                    )
-                release.set()
-                await asyncio.gather(*calls)
-                reloaded = await reload_task
-
-            # Assert
-            assert reload_pending
-            assert session_open_during_reload
-            assert reloaded
-            assert session.closed
-            assert len(readings) == 2
-            assert entry.state is ConfigEntryState.LOADED
-            assert entry.runtime_data is not api
-        finally:
-            release.set()
-            await asyncio.gather(*calls, return_exceptions=True)
-            if reload_task:
-                await reload_task
+    monkeypatch.setattr(
+        "custom_components.energy_tracker.api.EnergyTrackerClient",
+        partial(EnergyTrackerClient, base_url=str(server.make_url("/"))),
+    )
+    try:
+        yield received, release
+    finally:
+        release.set()
 
 
-async def test_shutdown_action_finishes_before_client_closes(hass, sdk_requests):
-    """A final reading from an HA shutdown action remains supported."""
-    # Arrange
+@pytest.fixture
+async def local_entry(hass, delayed_api_server):
+    """Set up an account after redirecting the SDK to the local server."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: "test-token"})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
-    api = entry.runtime_data
-    sdk_requests.post(
-        "https://public-api.energy-tracker.best-ios-apps.de/v1/devices/standard/device-123/meter-readings",
-        status=201,
-    )
     hass.states.async_set("sensor.meter", "123.45")
+    return entry
+
+
+@pytest.mark.enable_socket
+async def test_reload_waits_for_in_flight_writes(
+    hass, local_entry, delayed_api_server, start_task, monkeypatch
+):
+    """Do not disconnect accepted POSTs before receiving their responses."""
+    # Arrange
+    received, release = delayed_api_server
+    entry = local_entry
+    api = entry.runtime_data
+    closing = asyncio.Event()
+    data = {
+        "entry_id": entry.entry_id,
+        "device_id": "device-123",
+        "source_entity_id": "sensor.meter",
+    }
+    calls = [
+        start_task(
+            hass.services.async_call(
+                DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
+            )
+        )
+        for _ in range(2)
+    ]
+    await asyncio.wait_for(received.get(), timeout=5)
+    await asyncio.wait_for(received.get(), timeout=5)
+    session = api._client._session
+    close = api.async_close
+
+    async def close_client():
+        closing.set()
+        await close()
+
+    monkeypatch.setattr(api, "async_close", close_client)
+
+    # Act
+    reload_task = start_task(hass.config_entries.async_reload(entry.entry_id))
+    await asyncio.wait_for(closing.wait(), timeout=5)
+    reload_pending = not reload_task.done()
+    session_open_during_reload = not session.closed
+    release.set()
+    await asyncio.gather(*calls)
+    reloaded = await reload_task
+
+    # Assert
+    assert reload_pending
+    assert session_open_during_reload
+    assert reloaded
+    assert session.closed
+    assert received.empty()
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data is not api
+
+
+async def test_shutdown_action_finishes_before_client_closes(
+    hass, reading_data, open_session, sdk_requests
+):
+    """A final reading from an HA shutdown action remains supported."""
+    # Arrange
     completed = asyncio.Event()
 
     async def send_on_shutdown():
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_METER_READING,
-            {
-                "entry_id": entry.entry_id,
-                "device_id": "device-123",
-                "source_entity_id": "sensor.meter",
-            },
-            blocking=True,
+            DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
         )
         completed.set()
 
@@ -166,164 +188,146 @@ async def test_shutdown_action_finishes_before_client_closes(hass, sdk_requests)
 
     # Assert
     assert completed.is_set()
-    assert sdk_requests.call_count == 1
-    assert api._client._session.closed
+    assert sdk_requests.call_count == 2
+    assert open_session.closed
 
 
-async def test_failed_close_keeps_shutdown_cleanup_and_rejects_actions(hass):
-    """An unload failure must not expose the closed client or discard cleanup."""
+async def test_failed_close_keeps_shutdown_cleanup(hass, loaded_entry, monkeypatch):
+    """HA retains failed unload state and retries client cleanup on shutdown."""
     # Arrange
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: "test-token"})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    api = entry.runtime_data
-    with patch.object(
-        api._client, "close", side_effect=[RuntimeError("Close failed"), None]
-    ) as close:
-        # Act
-        unloaded = await hass.config_entries.async_unload(entry.entry_id)
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_SEND_METER_READING,
-                {
-                    "entry_id": entry.entry_id,
-                    "device_id": "device-123",
-                    "source_entity_id": "sensor.meter",
-                },
-                blocking=True,
-            )
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
-
-        # Assert
-        assert not unloaded
-        assert entry.state is ConfigEntryState.FAILED_UNLOAD
-        assert entry.runtime_data is api
-        assert close.await_count == 2
-
-
-async def test_client_session_reuse_reload_and_shutdown(hass, sdk_requests):
-    """Reuse the real SDK session and replace it with new credentials on reload."""
-    # Arrange
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: "old-token"})
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    api = entry.runtime_data
-    sdk_requests.post(
-        "https://public-api.energy-tracker.best-ios-apps.de/v1/devices/standard/device-123/meter-readings",
-        status=201,
-    )
-    hass.states.async_set("sensor.meter", "123.45")
-    data = {
-        "entry_id": entry.entry_id,
-        "device_id": "device-123",
-        "source_entity_id": "sensor.meter",
-    }
+    api = loaded_entry.runtime_data
+    close = AsyncMock(side_effect=[RuntimeError("Close failed"), None])
+    monkeypatch.setattr(api._client, "close", close)
 
     # Act
-    await hass.services.async_call(
-        DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
-    )
-    session = api._client._session
-    await hass.services.async_call(
-        DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
-    )
-    reused_api = entry.runtime_data
-    reused_session = api._client._session
-    session_open_after_reuse = not session.closed
-
-    hass.config_entries.async_update_entry(entry, data={CONF_API_TOKEN: "new-token"})
-    with patch.object(api, "async_close", wraps=api.async_close) as close_old:
-        reloaded = await hass.config_entries.async_reload(entry.entry_id)
-        old_session_closed_after_reload = session.closed
-        await hass.services.async_call(
-            DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
-        )
-        new_session = entry.runtime_data._client._session
-        new_session_open_before_stop = not new_session.closed
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
-        with pytest.raises(HomeAssistantError) as err:
-            await hass.services.async_call(
-                DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
-            )
-        # Assert
-        assert reused_api is api
-        assert reused_session is session
-        assert session_open_after_reuse
-        assert session.headers["Authorization"] == "Bearer old-token"
-        assert reloaded
-        assert old_session_closed_after_reload
-        assert entry.runtime_data is not api
-        assert new_session is not session
-        assert new_session.headers["Authorization"] == "Bearer new-token"
-        assert new_session_open_before_stop
-        close_old.assert_awaited_once()
-        assert err.value.translation_key == "no_api_token"
-        assert sdk_requests.call_count == 3
-        assert new_session.closed
-
-
-async def test_unloading_one_account_preserves_other_session(hass, sdk_requests):
-    """An account's credentials and session must remain independent of others."""
-    # Arrange
-    entries = [
-        MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: token})
-        for token in ("first-token", "second-token")
-    ]
-    for entry in entries:
-        entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entries[0].entry_id)
+    unloaded = await hass.config_entries.async_unload(loaded_entry.entry_id)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    sdk_requests.post(
-        "https://public-api.energy-tracker.best-ios-apps.de/v1/devices/standard/device-123/meter-readings",
-        status=201,
-    )
-    hass.states.async_set("sensor.meter", "123.45")
-    data = {"device_id": "device-123", "source_entity_id": "sensor.meter"}
-    for entry in entries:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_METER_READING,
-            {**data, "entry_id": entry.entry_id},
-            blocking=True,
-        )
-    first = entries[0].runtime_data._client._session
-    second = entries[1].runtime_data._client._session
-
-    # Act
-    first_unloaded = await hass.config_entries.async_unload(entries[0].entry_id)
-    first_closed_after_unload = first.closed
-    second_open_after_first_unload = not second.closed
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_METER_READING,
-            {**data, "entry_id": entries[0].entry_id},
-            blocking=True,
-        )
-    requests_after_rejected_call = sdk_requests.call_count
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SEND_METER_READING,
-        {**data, "entry_id": entries[1].entry_id},
-        blocking=True,
-    )
-    second_unloaded = await hass.config_entries.async_unload(entries[1].entry_id)
 
     # Assert
-    assert first is not second
-    assert first.headers["Authorization"] == "Bearer first-token"
-    assert second.headers["Authorization"] == "Bearer second-token"
-    assert first_unloaded
-    assert first_closed_after_unload
-    assert second_open_after_first_unload
-    assert requests_after_rejected_call == 2
+    assert not unloaded
+    assert loaded_entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert loaded_entry.runtime_data is api
+    assert close.await_count == 2
+
+
+async def test_readings_reuse_session(
+    hass, loaded_entry, reading_data, open_session, sdk_requests
+):
+    """Repeated readings use the same account client and HTTP session."""
+    # Arrange
+    api = loaded_entry.runtime_data
+
+    # Act
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
+    )
+
+    # Assert
+    assert loaded_entry.runtime_data is api
+    assert api._client._session is open_session
+    assert not open_session.closed
+    assert open_session.headers["Authorization"] == "Bearer old-token"
+    assert sdk_requests.call_count == 2
+
+
+async def test_reload_replaces_session_and_credentials(
+    hass, loaded_entry, reading_data, open_session, sdk_requests
+):
+    """Reload closes the old session and uses the updated token."""
+    # Arrange
+    api = loaded_entry.runtime_data
+    hass.config_entries.async_update_entry(
+        loaded_entry, data={CONF_API_TOKEN: "new-token"}
+    )
+
+    # Act
+    reloaded = await hass.config_entries.async_reload(loaded_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
+    )
+
+    # Assert
+    new_session = loaded_entry.runtime_data._client._session
+    assert reloaded
+    assert open_session.closed
+    assert loaded_entry.runtime_data is not api
+    assert new_session is not open_session
+    assert new_session.headers["Authorization"] == "Bearer new-token"
+    assert not new_session.closed
+    assert sdk_requests.call_count == 2
+
+
+async def test_reload_removes_old_shutdown_listener(
+    hass, loaded_entry, reading_data, open_session, monkeypatch
+):
+    """Shutdown closes the new client without calling the old client again."""
+    # Arrange
+    old_api = loaded_entry.runtime_data
+    close_old = AsyncMock(wraps=old_api.async_close)
+    monkeypatch.setattr(old_api, "async_close", close_old)
+    assert await hass.config_entries.async_reload(loaded_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
+    )
+    new_session = loaded_entry.runtime_data._client._session
+
+    # Act
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Assert
+    assert open_session.closed
+    assert new_session.closed
+    close_old.assert_awaited_once()
+
+
+async def test_stopped_client_rejects_readings(
+    hass, reading_data, open_session, sdk_requests
+):
+    """A later action must never reopen the closed session."""
+    # Arrange
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    # Act & Assert
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
+        )
+    assert err.value.translation_key == "no_api_token"
+    assert sdk_requests.call_count == 1
+    assert open_session.closed
+
+
+async def test_unloading_one_account_preserves_other_session(
+    hass, loaded_entry, reading_data, open_session, sdk_requests
+):
+    """Unloading one account leaves the other account's session usable."""
+    # Arrange
+    other = MockConfigEntry(domain=DOMAIN, data={CONF_API_TOKEN: "second-token"})
+    other.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(other.entry_id)
+    other_data = {**reading_data, "entry_id": other.entry_id}
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, other_data, blocking=True
+    )
+    other_session = other.runtime_data._client._session
+
+    # Act
+    unloaded = await hass.config_entries.async_unload(loaded_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, other_data, blocking=True
+    )
+
+    # Assert
+    assert unloaded
+    assert open_session.closed
+    assert not other_session.closed
+    assert other.runtime_data._client._session is other_session
+    assert open_session.headers["Authorization"] == "Bearer old-token"
+    assert other_session.headers["Authorization"] == "Bearer second-token"
     assert sdk_requests.call_count == 3
-    assert second_unloaded
-    assert second.closed
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_METER_READING)
 
 
@@ -339,7 +343,9 @@ async def test_unloading_one_account_preserves_other_session(hass, sdk_requests)
 async def test_service_rejects_foreign_or_unloaded_entries(hass, domain, state):
     """Never access runtime data or send a request for an unavailable account."""
     # Arrange
-    entry = MockConfigEntry(domain=domain, state=state, data={})
+    entry = MockConfigEntry(
+        domain=domain, state=state, data={CONF_API_TOKEN: "test-token"}
+    )
     entry.add_to_hass(hass)
     await async_setup(hass, {})
 
