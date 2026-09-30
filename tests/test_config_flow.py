@@ -6,6 +6,7 @@ from hashlib import sha256
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -45,8 +46,11 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.parametrize("disabled_by", [None, ConfigEntryDisabler.USER])
 @pytest.mark.parametrize("version", [1, 2])
-async def test_user_form_duplicate_token(hass: HomeAssistant, version: int) -> None:
+async def test_user_form_duplicate_token(
+    hass: HomeAssistant, version: int, disabled_by
+) -> None:
     """Test abort when token already configured."""
     # Arrange
     existing_entry = MockConfigEntry(
@@ -59,6 +63,7 @@ async def test_user_form_duplicate_token(hass: HomeAssistant, version: int) -> N
             else sha256(b"duplicate-token").hexdigest()
         ),
         version=version,
+        disabled_by=disabled_by,
     )
     existing_entry.add_to_hass(hass)
 
@@ -120,9 +125,10 @@ async def test_reconfigure_form_update_token(hass: HomeAssistant) -> None:
     mock_reload.assert_called_once_with(entry.entry_id)
 
 
+@pytest.mark.parametrize("disabled_by", [None, ConfigEntryDisabler.USER])
 @pytest.mark.parametrize("version", [1, 2])
 async def test_reconfigure_form_duplicate_token(
-    hass: HomeAssistant, version: int
+    hass: HomeAssistant, version: int, disabled_by
 ) -> None:
     """Test abort when reconfigure token conflicts with another entry."""
     # Arrange
@@ -132,6 +138,7 @@ async def test_reconfigure_form_duplicate_token(
         data={CONF_API_TOKEN: "token-1"},
         unique_id="token-1" if version == 1 else sha256(b"token-1").hexdigest(),
         version=version,
+        disabled_by=disabled_by,
     )
     entry1.add_to_hass(hass)
 
@@ -206,3 +213,33 @@ async def test_reconfigure_form_does_not_expose_token(hass: HomeAssistant) -> No
     # Assert
     token_field = next(iter(result["data_schema"].schema))
     assert token_field.default is vol.UNDEFINED
+
+
+@pytest.mark.parametrize("version", [1, 2])
+@pytest.mark.parametrize("token", ["old-token", "new-token"])
+async def test_reconfigure_unloaded_entry(hass, version, token):
+    """Reload and migrate unloaded accounts for unchanged and replaced tokens."""
+    # Arrange
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_TOKEN: "old-token"},
+        unique_id="old-token" if version == 1 else sha256(b"old-token").hexdigest(),
+        version=version,
+    )
+    entry.add_to_hass(hass)
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+    )
+
+    # Act
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {CONF_API_TOKEN: token}
+    )
+    await hass.async_block_till_done()
+
+    # Assert
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.unique_id == sha256(token.encode()).hexdigest()
+    assert entry.data == {CONF_API_TOKEN: token}

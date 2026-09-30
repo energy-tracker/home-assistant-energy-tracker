@@ -22,6 +22,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.energy_tracker import (
     async_handle_send_meter_reading,
+    async_migrate_entry,
     async_setup,
 )
 from custom_components.energy_tracker.api import EnergyTrackerApi
@@ -333,20 +334,21 @@ async def test_unloading_one_account_preserves_other_session(
 
 
 @pytest.mark.parametrize(
+    "data", [{}, {CONF_API_TOKEN: ""}, {CONF_API_TOKEN: "test-token"}]
+)
+@pytest.mark.parametrize(
     ("domain", "state"),
-    [("other", ConfigEntryState.LOADED)]
+    [("other", state) for state in ConfigEntryState]
     + [
         (DOMAIN, state)
         for state in ConfigEntryState
         if state is not ConfigEntryState.LOADED
     ],
 )
-async def test_service_rejects_foreign_or_unloaded_entries(hass, domain, state):
-    """Never access runtime data or send a request for an unavailable account."""
+async def test_service_rejects_foreign_or_unloaded_entries(hass, domain, state, data):
+    """Unavailable accounts take precedence over credentials in every HA state."""
     # Arrange
-    entry = MockConfigEntry(
-        domain=domain, state=state, data={CONF_API_TOKEN: "test-token"}
-    )
+    entry = MockConfigEntry(domain=domain, state=state, data=data)
     entry.add_to_hass(hass)
     await async_setup(hass, {})
 
@@ -1019,3 +1021,127 @@ async def test_migration_does_not_downgrade_future_entry(hass):
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == 3
     assert entry.unique_id == "future-id"
+
+
+@pytest.mark.parametrize("token", ["old-token", "replacement-token"])
+async def test_reconfiguration_reloads_real_client(
+    hass, loaded_entry, reading_data, open_session, sdk_requests, token
+):
+    """A completed reconfiguration must replace the session and preserve references."""
+    # Arrange
+    api = loaded_entry.runtime_data
+    entry_id = loaded_entry.entry_id
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reconfigure", "entry_id": entry_id}
+    )
+
+    # Act
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {CONF_API_TOKEN: token}
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
+    )
+
+    # Assert
+    assert result["reason"] == "reconfigure_successful"
+    assert open_session.closed
+    assert loaded_entry.entry_id == entry_id
+    assert loaded_entry.version == 2
+    assert loaded_entry.unique_id == sha256(token.encode()).hexdigest()
+    assert loaded_entry.data == {CONF_API_TOKEN: token}
+    assert loaded_entry.runtime_data is not api
+    session = loaded_entry.runtime_data._client._session
+    assert not session.closed
+    assert session.headers["Authorization"] == f"Bearer {token}"
+    assert sdk_requests.call_count == 2
+
+
+@pytest.mark.parametrize("minor_version", [1, 2])
+async def test_migration_preserves_current_and_future_minor_entries(
+    hass, minor_version
+):
+    """Repeat migration must neither hash an ID again nor downgrade minor versions."""
+    # Arrange
+    unique_id = sha256(b"existing-token").hexdigest()
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_TOKEN: "existing-token"},
+        unique_id=unique_id,
+        version=2,
+        minor_version=minor_version,
+    )
+    entry.add_to_hass(hass)
+
+    # Act
+    migrated = await async_migrate_entry(hass, entry)
+
+    # Assert
+    assert migrated
+    assert entry.unique_id == unique_id
+    assert entry.version == 2
+    assert entry.minor_version == minor_version
+    assert entry.data == {CONF_API_TOKEN: "existing-token"}
+
+
+async def test_concurrent_close_is_idempotent(hass, loaded_entry, open_session):
+    """Overlapping unload/shutdown cleanup must safely close the actual SDK session."""
+    # Arrange
+    api = loaded_entry.runtime_data
+
+    # Act
+    await asyncio.gather(api.async_close(), api.async_close())
+    await api.async_close()
+
+    # Assert
+    assert open_session.closed
+    assert api._client._session is open_session
+
+
+@pytest.mark.enable_socket
+async def test_cancelled_close_can_be_retried(
+    hass, local_entry, delayed_api_server, start_task, monkeypatch
+):
+    """Canceling a close waiter must not abort the reading or prevent later cleanup."""
+    # Arrange
+    received, release = delayed_api_server
+    api = local_entry.runtime_data
+    call = start_task(
+        hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_METER_READING,
+            {
+                "entry_id": local_entry.entry_id,
+                "device_id": "device-123",
+                "source_entity_id": "sensor.meter",
+            },
+            blocking=True,
+        )
+    )
+    await asyncio.wait_for(received.get(), timeout=5)
+    session = api._client._session
+    closing = asyncio.Event()
+    original_close = api.async_close
+
+    async def close_client():
+        closing.set()
+        await original_close()
+
+    monkeypatch.setattr(api, "async_close", close_client)
+
+    # Act
+    close = start_task(api.async_close())
+    await asyncio.wait_for(closing.wait(), timeout=5)
+    close.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await close
+    session_still_open = not session.closed
+    release.set()
+    await asyncio.wait_for(call, timeout=5)
+    await asyncio.wait_for(api.async_close(), timeout=5)
+
+    # Assert
+    assert session_still_open
+    assert session.closed
+    assert received.empty()

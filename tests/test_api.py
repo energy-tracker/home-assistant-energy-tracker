@@ -489,3 +489,77 @@ class TestSendMeterReading:
                 exc_info.value.translation_placeholders["error"]
                 == "Something went wrong"
             )
+
+
+@pytest.mark.parametrize("first", ["success", "timeout", "cancel"])
+@pytest.mark.parametrize("second", ["success", "timeout", "cancel"])
+@pytest.mark.parametrize("order", [(0, 1), (1, 0)])
+async def test_close_waits_for_every_request_outcome(
+    start_task, monkeypatch, first, second, order
+):
+    """Drain both requests for every success/failure/cancellation completion order."""
+    # Arrange
+    loop = asyncio.get_running_loop()
+    responses = [loop.create_future(), loop.create_future()]
+    entered = asyncio.Queue()
+    outcomes = (first, second)
+
+    async def request(**kwargs):
+        index = int(kwargs["meter_reading"].value) - 1
+        entered.put_nowait(index)
+        await responses[index]
+
+    client = MagicMock()
+    client.meter_readings.create = AsyncMock(side_effect=request)
+    client.close = AsyncMock()
+    monkeypatch.setattr(
+        "custom_components.energy_tracker.api.EnergyTrackerClient",
+        MagicMock(return_value=client),
+    )
+    api = EnergyTrackerApi(token="test-token")
+    calls = [
+        start_task(
+            api.send_meter_reading(
+                source_entity_id="sensor.meter",
+                device_id="device-123",
+                value=index + 1,
+                timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+            )
+        )
+        for index in range(2)
+    ]
+    await asyncio.wait_for(entered.get(), timeout=5)
+    await asyncio.wait_for(entered.get(), timeout=5)
+
+    # Act
+    close = start_task(api.async_close())
+    await asyncio.sleep(0)
+    pending_before_completion = []
+    close_calls_before_completion = []
+    results = [None, None]
+    for index in order:
+        pending_before_completion.append(not close.done())
+        close_calls_before_completion.append(client.close.await_count)
+        if outcomes[index] == "cancel":
+            calls[index].cancel()
+        elif outcomes[index] == "timeout":
+            responses[index].set_exception(TimeoutError("Request timed out"))
+        else:
+            responses[index].set_result(None)
+        results[index] = (await asyncio.gather(calls[index], return_exceptions=True))[0]
+    await asyncio.wait_for(close, timeout=5)
+
+    # Assert
+    assert pending_before_completion == [True, True]
+    assert close_calls_before_completion == [0, 0]
+    expected_types = {
+        "success": type(None),
+        "timeout": HomeAssistantError,
+        "cancel": asyncio.CancelledError,
+    }
+    assert [type(result) for result in results] == [
+        expected_types[first],
+        expected_types[second],
+    ]
+    client.close.assert_awaited_once()
+    assert client.meter_readings.create.await_count == 2
