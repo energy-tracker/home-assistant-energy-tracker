@@ -76,6 +76,7 @@ def export_to_core(source_root: Path, core_root: Path) -> None:
     path = component / "manifest.json"
     manifest = json.loads(path.read_text())
     manifest.pop("version", None)
+    manifest.pop("issue_tracker", None)
     manifest["documentation"] = (
         "https://www.home-assistant.io/integrations/energy_tracker/"
     )

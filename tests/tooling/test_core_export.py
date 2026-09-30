@@ -39,6 +39,7 @@ def test_core_export_contains_only_integration_files(tmp_path: Path) -> None:
 
     manifest = json.loads((component / "manifest.json").read_text())
     assert "version" not in manifest
+    assert "issue_tracker" not in manifest
     assert manifest["requirements"] == json.loads(original_manifest)["requirements"]
     assert manifest["documentation"] == (
         "https://www.home-assistant.io/integrations/energy_tracker/"
