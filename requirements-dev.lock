@@ -1,8 +1,8 @@
-energy-tracker-api==1.0.0
-homeassistant==2026.1.1
+energy-tracker-api==3.0.0
+homeassistant==2026.3.1
 mypy==1.19.1
 pytest==9.0.0
 pytest-asyncio==1.3.0
 pytest-cov==7.0.0
-pytest-homeassistant-custom-component==0.13.306
-ruff==0.14.13
+pytest-homeassistant-custom-component==0.13.317
+ruff==0.15.1

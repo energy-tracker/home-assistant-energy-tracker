@@ -64,7 +64,7 @@
       "message": "엔티티 {entity_id}가 {state} 상태입니다."
     },
     "invalid_number": {
-      "message": "엔티티 {entity_id}의 값 \"{state}\"은(는) 숫자가 아닙니다."
+      "message": "엔터티 {entity_id}의 계량기 값 \"{state}\"이(가) 올바르지 않습니다. 값은 유한하고 0 이상 10000000000 미만이어야 합니다."
     },
     "missing_timestamp": {
       "message": "엔티티 {entity_id}에 타임스탬프가 없습니다."

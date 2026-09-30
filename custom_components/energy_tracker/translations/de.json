@@ -64,7 +64,7 @@
       "message": "Entität {entity_id} ist {state}."
     },
     "invalid_number": {
-      "message": "Wert \"{state}\" von Entität {entity_id} ist keine Zahl."
+      "message": "Ungültiger Zählerstand \"{state}\" von Entität {entity_id}. Der Wert muss endlich, nicht negativ und kleiner als 10000000000 sein."
     },
     "missing_timestamp": {
       "message": "Entität {entity_id} hat keinen Zeitstempel."

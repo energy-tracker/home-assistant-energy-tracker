@@ -64,7 +64,7 @@
       "message": "L'entité {entity_id} est {state}."
     },
     "invalid_number": {
-      "message": "La valeur \"{state}\" de l'entité {entity_id} n'est pas un nombre."
+      "message": "Relevé de compteur \"{state}\" invalide pour l’entité {entity_id}. La valeur doit être finie, positive ou nulle et inférieure à 10000000000."
     },
     "missing_timestamp": {
       "message": "L'entité {entity_id} n'a pas d'horodatage."

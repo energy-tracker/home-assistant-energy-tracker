@@ -1,5 +1,5 @@
 # Repository tools do not use Home Assistant integration-specific lint rules.
-target-version = "py313"
+target-version = "py314"
 line-length = 88
 
 [lint]

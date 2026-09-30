@@ -64,7 +64,7 @@
       "message": "เอนทิตี {entity_id} อยู่ในสถานะ {state}"
     },
     "invalid_number": {
-      "message": "ค่า \"{state}\" ของเอนทิตี {entity_id} ไม่ใช่ตัวเลข"
+      "message": "ค่ามิเตอร์ \"{state}\" จากเอนทิตี {entity_id} ไม่ถูกต้อง ค่าต้องเป็นจำนวนจำกัด ไม่ติดลบ และน้อยกว่า 10000000000"
     },
     "missing_timestamp": {
       "message": "เอนทิตี {entity_id} ไม่มีการประทับเวลา"

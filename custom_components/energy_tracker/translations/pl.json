@@ -64,7 +64,7 @@
       "message": "Encja {entity_id} jest {state}."
     },
     "invalid_number": {
-      "message": "Wartość \"{state}\" encji {entity_id} nie jest liczbą."
+      "message": "Nieprawidłowy odczyt licznika \"{state}\" z encji {entity_id}. Wartość musi być skończona, nieujemna i mniejsza niż 10000000000."
     },
     "missing_timestamp": {
       "message": "Encja {entity_id} nie ma znacznika czasu."

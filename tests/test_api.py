@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime
+from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from energy_tracker_api import (
@@ -47,7 +48,7 @@ async def test_close_drains_requests_after_cancellation_and_failure(
     data = {
         "source_entity_id": "sensor.meter",
         "device_id": "device-123",
-        "value": 123.45,
+        "value": Decimal("123.45"),
         "timestamp": datetime(2026, 1, 1, tzinfo=UTC),
     }
     tasks = [start_task(api.send_meter_reading(**data)) for _ in range(2)]
@@ -118,7 +119,7 @@ class TestSendMeterReading:
             await api.send_meter_reading(
                 source_entity_id="sensor.power_meter",
                 device_id=device_id,
-                value=1234.5,
+                value=Decimal("1234.5"),
                 timestamp=timestamp,
                 allow_rounding=True,
             )
@@ -127,7 +128,7 @@ class TestSendMeterReading:
             mock_client.meter_readings.create.assert_called_once()
             call_args = mock_client.meter_readings.create.call_args
             assert call_args[1]["device_id"] == device_id
-            assert call_args[1]["meter_reading"].value == 1234.5
+            assert call_args[1]["meter_reading"].value == Decimal("1234.5")
             assert call_args[1]["meter_reading"].timestamp == timestamp
             assert call_args[1]["allow_rounding"] is True
 
@@ -152,7 +153,7 @@ class TestSendMeterReading:
             await api.send_meter_reading(
                 source_entity_id="sensor.power_meter",
                 device_id=device_id,
-                value=1234.5,
+                value=Decimal("1234.5"),
                 timestamp=timestamp,
                 allow_rounding=False,
             )
@@ -186,7 +187,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -219,7 +220,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -246,7 +247,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -273,7 +274,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -301,7 +302,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -334,7 +335,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -364,7 +365,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -391,7 +392,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -418,7 +419,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -447,7 +448,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -480,7 +481,7 @@ class TestSendMeterReading:
                 await api.send_meter_reading(
                     source_entity_id="sensor.power_meter",
                     device_id=device_id,
-                    value=1234.5,
+                    value=Decimal("1234.5"),
                     timestamp=timestamp,
                 )
 
@@ -522,7 +523,7 @@ async def test_close_waits_for_every_request_outcome(
             api.send_meter_reading(
                 source_entity_id="sensor.meter",
                 device_id="device-123",
-                value=index + 1,
+                value=Decimal(index + 1),
                 timestamp=datetime(2026, 1, 1, tzinfo=UTC),
             )
         )

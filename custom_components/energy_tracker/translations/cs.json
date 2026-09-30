@@ -64,7 +64,7 @@
       "message": "Entita {entity_id} je ve stavu {state}."
     },
     "invalid_number": {
-      "message": "Hodnota \"{state}\" entity {entity_id} není číslo."
+      "message": "Neplatný stav měřidla \"{state}\" z entity {entity_id}. Hodnota musí být konečná, nezáporná a menší než 10000000000."
     },
     "missing_timestamp": {
       "message": "Entita {entity_id} nemá časové razítko."

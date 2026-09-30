@@ -64,7 +64,7 @@
       "message": "Az {entity_id} entitás {state} állapotban van."
     },
     "invalid_number": {
-      "message": "Az {entity_id} entitás \"{state}\" értéke nem szám."
+      "message": "Érvénytelen mérőállás \"{state}\" a(z) {entity_id} entitástól. Az értéknek végesnek, nemnegatívnak és 10000000000-nál kisebbnek kell lennie."
     },
     "missing_timestamp": {
       "message": "Az {entity_id} entitásnak nincs időbélyege."

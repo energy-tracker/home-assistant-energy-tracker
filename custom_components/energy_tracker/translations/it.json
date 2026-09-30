@@ -64,7 +64,7 @@
       "message": "L'entità {entity_id} è {state}."
     },
     "invalid_number": {
-      "message": "Il valore \"{state}\" dell'entità {entity_id} non è un numero."
+      "message": "Lettura del contatore \"{state}\" non valida dall’entità {entity_id}. Il valore deve essere finito, non negativo e inferiore a 10000000000."
     },
     "missing_timestamp": {
       "message": "L'entità {entity_id} non ha un timestamp."

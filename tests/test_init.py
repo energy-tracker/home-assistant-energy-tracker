@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from decimal import Context, Decimal, Inexact, Rounded, localcontext
 from functools import partial
 from hashlib import sha256
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -19,6 +20,7 @@ from homeassistant.core import HassJob, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+import voluptuous as vol
 
 from custom_components.energy_tracker import (
     async_handle_send_meter_reading,
@@ -74,8 +76,8 @@ def reading_data(loaded_entry):
 async def open_session(hass, loaded_entry, reading_data, sdk_requests):
     """Open a real SDK session using a mocked HTTP response."""
     sdk_requests.post(
-        "https://public-api.energy-tracker.best-ios-apps.de/v1/devices/standard/device-123/meter-readings",
-        status=201,
+        "https://public-api.energy-tracker.best-ios-apps.de/v3/devices/standard/device-123/meter-readings",
+        status=204,
     )
     await hass.services.async_call(
         DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
@@ -84,7 +86,7 @@ async def open_session(hass, loaded_entry, reading_data, sdk_requests):
 
 
 @pytest.fixture
-async def delayed_api_server(aiohttp_server, monkeypatch):
+async def delayed_api_server(aiohttp_server, monkeypatch, socket_enabled):
     """Hold local POST responses until the test releases them."""
     received = asyncio.Queue()
     release = asyncio.Event()
@@ -92,10 +94,10 @@ async def delayed_api_server(aiohttp_server, monkeypatch):
     async def handle(request):
         received.put_nowait(await request.json())
         await release.wait()
-        return web.Response(status=201)
+        return web.Response(status=204)
 
     app = web.Application()
-    app.router.add_post("/v1/devices/standard/device-123/meter-readings", handle)
+    app.router.add_post("/v3/devices/standard/device-123/meter-readings", handle)
     server = await aiohttp_server(app)
     monkeypatch.setattr(
         "custom_components.energy_tracker.api.EnergyTrackerClient",
@@ -117,7 +119,6 @@ async def local_entry(hass, delayed_api_server):
     return entry
 
 
-@pytest.mark.enable_socket
 async def test_reload_waits_for_in_flight_writes(
     hass, local_entry, delayed_api_server, start_task, monkeypatch
 ):
@@ -580,7 +581,7 @@ class TestAsyncHandleSendMeterReading:
         call_kwargs = mock_send.call_args.kwargs
         assert call_kwargs["source_entity_id"] == "sensor.energy_meter"
         assert call_kwargs["device_id"] == "device-123"
-        assert call_kwargs["value"] == 123.45
+        assert call_kwargs["value"] == Decimal("123.45")
         assert call_kwargs["allow_rounding"] is True
 
     async def test_entity_not_found_raises_error(self, hass: HomeAssistant):
@@ -970,7 +971,7 @@ class TestAsyncHandleSendMeterReading:
         mock_send.assert_called_once()
         call_kwargs = mock_send.call_args.kwargs
         assert call_kwargs["device_id"] == "device-123"
-        assert call_kwargs["value"] == 123.45
+        assert call_kwargs["value"] == Decimal("123.45")
 
 
 async def test_setup_migrates_legacy_token_id(hass):
@@ -1099,7 +1100,6 @@ async def test_concurrent_close_is_idempotent(hass, loaded_entry, open_session):
     assert api._client._session is open_session
 
 
-@pytest.mark.enable_socket
 async def test_cancelled_close_can_be_retried(
     hass, local_entry, delayed_api_server, start_task, monkeypatch
 ):
@@ -1144,4 +1144,166 @@ async def test_cancelled_close_can_be_retried(
     # Assert
     assert session_still_open
     assert session.closed
+    assert received.empty()
+
+
+@pytest.mark.parametrize("allow_rounding", [False, True])
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("0", "0"),
+        ("-0.000000", "0"),
+        ("123.450000000", "123.45"),
+        ("0.30000000000000004", "0.3"),
+        ("123.4567899", "123.456789"),
+        ("0.0000009", "0"),
+        ("1e-6", "0.000001"),
+        ("1e-1000000", "0"),
+        ("1e9", "1000000000"),
+        ("9999999999.999999", "9999999999.999999"),
+        ("9999999999.9999999", "9999999999.999999"),
+        (" 12.3400 ", "12.34"),
+    ],
+)
+async def test_v3_request_preserves_decimal_precision(
+    hass, loaded_entry, reading_data, sdk_requests, raw, expected, allow_rounding
+):
+    """Send fixed-point decimal strings independently of meter rounding and context."""
+    # Arrange
+    hass.states.async_set("sensor.meter", raw)
+    sdk_requests.post(
+        "https://public-api.energy-tracker.best-ios-apps.de/v3/devices/standard/device-123/meter-readings",
+        status=204,
+    )
+    data = {**reading_data, "allow_rounding": allow_rounding}
+    context = Context(prec=3, traps=[Inexact, Rounded])
+
+    # Act
+    with localcontext(context):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
+        )
+
+    # Assert
+    assert sdk_requests.call_count == 1
+    method, url, payload, _ = sdk_requests.mock_calls[0]
+    assert method == "POST"
+    assert url.path == "/v3/devices/standard/device-123/meter-readings"
+    assert url.query["allowRounding"] == str(allow_rounding).lower()
+    assert payload == {
+        "value": expected,
+        "timestamp": hass.states.get("sensor.meter").last_updated.isoformat(
+            timespec="milliseconds"
+        ),
+    }
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "",
+        "abc",
+        "1,23",
+        "NaN",
+        "sNaN",
+        "Infinity",
+        "-Infinity",
+        "-1",
+        "-0.0000001",
+        "10000000000",
+        "1e1000000",
+    ],
+)
+async def test_invalid_meter_readings_never_reach_sdk(
+    hass, loaded_entry, reading_data, raw
+):
+    """Reject malformed, non-finite, negative and out-of-range readings locally."""
+    # Arrange
+    hass.states.async_set("sensor.meter", raw)
+
+    # Act & Assert
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
+        )
+    assert err.value.translation_key == "invalid_number"
+    assert loaded_entry.runtime_data._client._session is None
+
+
+@pytest.mark.parametrize("device_id", ["", " ", "\t\n"])
+async def test_blank_device_id_is_rejected(hass, loaded_entry, reading_data, device_id):
+    """Reject empty IDs at the action schema before opening an HTTP session."""
+    # Arrange
+    data = {**reading_data, "device_id": device_id}
+
+    # Act & Assert
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
+        )
+    assert loaded_entry.runtime_data._client._session is None
+
+
+@pytest.mark.parametrize(
+    ("status", "translation_key"),
+    [
+        (200, "server_error"),
+        (201, "server_error"),
+        (302, "server_error"),
+        (400, "bad_request"),
+        (401, "auth_failed"),
+        (403, "auth_failed"),
+        (404, "device_not_found"),
+        (409, "conflict"),
+        (429, "rate_limit"),
+        (500, "server_error"),
+        (503, "server_error"),
+    ],
+)
+async def test_v3_http_errors_are_translated_without_retries(
+    hass, loaded_entry, reading_data, sdk_requests, status, translation_key
+):
+    """Exercise SDK HTTP status handling through the HA action boundary."""
+    # Arrange
+    sdk_requests.post(
+        "https://public-api.energy-tracker.best-ios-apps.de/v3/devices/standard/device-123/meter-readings",
+        status=status,
+        json={"message": ["Request rejected"]},
+        headers={"Retry-After": "10"},
+    )
+
+    # Act & Assert
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_SEND_METER_READING, reading_data, blocking=True
+        )
+    assert err.value.translation_key == translation_key
+    assert sdk_requests.call_count == 1
+
+
+async def test_v3_decimal_value_reaches_http_server(
+    hass, local_entry, delayed_api_server, start_task
+):
+    """Verify the maximum supported decimal survives actual JSON serialization."""
+    # Arrange
+    received, release = delayed_api_server
+    release.set()
+    hass.states.async_set("sensor.meter", "9999999999.9999999")
+    data = {
+        "entry_id": local_entry.entry_id,
+        "device_id": "device-123",
+        "source_entity_id": "sensor.meter",
+    }
+
+    # Act
+    call = start_task(
+        hass.services.async_call(
+            DOMAIN, SERVICE_SEND_METER_READING, data, blocking=True
+        )
+    )
+    payload = await asyncio.wait_for(received.get(), timeout=5)
+    await asyncio.wait_for(call, timeout=5)
+
+    # Assert
+    assert payload["value"] == "9999999999.999999"
     assert received.empty()

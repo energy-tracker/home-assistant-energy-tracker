@@ -20,6 +20,8 @@ Send meter readings from Home Assistant sensors automatically to your [Energy Tr
 
 > **Note**: This integration is currently available via HACS only. Home Assistant Core integration is planned for the future.
 
+Requires **Home Assistant 2026.3.1 or newer** (Python 3.14.2+).
+
 ### Step 1: Install the Integration
 
 #### Option A: Via HACS (Recommended)
@@ -96,6 +98,11 @@ This integration provides a service only — no entities are created. Create an 
 | `device_id` | Yes | string | Standard measuring device ID from Energy Tracker (UUID format) |
 | `source_entity_id` | Yes | entity_id | Home Assistant sensor providing the meter reading |
 | `allow_rounding` | No | boolean | Round value to meter precision (default: `true`) |
+
+Sensor values are sent as decimal strings through API v3. Values must be finite,
+non-negative and below `10000000000`. Fractional digits beyond six places are
+truncated before sending. `allow_rounding` separately controls server-side rounding
+to the meter’s configured precision.
 
 ### Example Automation (YAML)
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime
+from decimal import Decimal
 import logging
 
 from energy_tracker_api import (
@@ -51,7 +52,7 @@ class EnergyTrackerApi:
         *,
         source_entity_id: str,
         device_id: str,
-        value: float,
+        value: Decimal,
         timestamp: datetime,
         allow_rounding: bool = False,
     ) -> None:
@@ -86,7 +87,7 @@ class EnergyTrackerApi:
                 meter_reading=meter_reading,
                 allow_rounding=allow_rounding,
             )
-            LOGGER.info("Reading sent: %g", value)
+            LOGGER.info("Reading sent: %s", value)
 
         except ValidationError as err:
             # HTTP 400 - Bad Request

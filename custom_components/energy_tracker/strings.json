@@ -67,7 +67,7 @@
       "message": "Entity {entity_id} is {state}."
     },
     "invalid_number": {
-      "message": "Entity {entity_id} value \"{state}\" is not a number."
+      "message": "Invalid meter reading \"{state}\" from entity {entity_id}. The value must be finite, non-negative and less than 10000000000."
     },
     "missing_timestamp": {
       "message": "Entity {entity_id} has no timestamp."
