@@ -7,70 +7,83 @@ on:
         description: "Python version from Home Assistant Core"
         value: ${{ jobs.setup.outputs.python-version }}
 
+permissions:
+  contents: read
+
 jobs:
   setup:
     name: Setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       python-version: ${{ steps.python-version.outputs.version }}
     steps:
-      - name: Checkout Home Assistant Core
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Read tested Home Assistant version
+        id: homeassistant
+        run: |
+          VERSION=$(sed -n 's/^homeassistant==//p' requirements-dev.lock)
+          test -n "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout tested Home Assistant release
+        uses: actions/checkout@v7
         with:
           repository: home-assistant/core
-          sparse-checkout: .github/workflows/ci.yaml
+          ref: ${{ steps.homeassistant.outputs.version }}
+          path: ha-core
+          sparse-checkout: .python-version
           sparse-checkout-cone-mode: false
 
       - name: Get Python version from Core
         id: python-version
-        run: |
-          VERSION=$(grep -E '^\s*DEFAULT_PYTHON:' .github/workflows/ci.yaml | sed 's/.*: *"\(.*\)"/\1/')
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        run: echo "version=$(cat ha-core/.python-version)" >> "$GITHUB_OUTPUT"
 
   test:
     name: Test
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ needs.setup.outputs.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          pip install -r requirements-dev.txt -c requirements-dev.lock
 
       - name: Run tests with coverage
         run: pytest --cov=custom_components.energy_tracker --cov-report=term --cov-report=xml -v
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
-          file: ./coverage.xml
+          files: ./coverage.xml
           fail_ci_if_error: false
 
   lint:
     name: Lint
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ needs.setup.outputs.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          pip install -r requirements-dev.txt -c requirements-dev.lock
 
       - name: Run ruff
         run: |
@@ -82,6 +95,6 @@ jobs:
 
       - name: Check JSON formatting
         run: |
-          find custom_components/energy_tracker -name "*.json" | while read file; do
+          find custom_components/energy_tracker -name "*.json" | while IFS= read -r file; do
             python3 -c "import json,sys; d=json.load(open('$file')); formatted=json.dumps(d,ensure_ascii=False,indent=2)+'\n'; current=open('$file').read(); sys.exit(0 if formatted==current else 1)" || (echo "❌ $file is not formatted correctly. Run 'make format' locally." && exit 1)
           done

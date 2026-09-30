@@ -1,10 +1,12 @@
 .PHONY: venv install test lint format sync-ruff sync-deps
 
+PYTHON ?= python3
+
 venv:
-	python3 -m venv .venv
+	$(PYTHON) -m venv .venv
 
 install:
-	. .venv/bin/activate && pip install -r requirements-dev.txt
+	. .venv/bin/activate && pip install -r requirements-dev.txt -c requirements-dev.lock
 
 sync-deps:
 	@echo "🔄 Syncing pytest-homeassistant-custom-component to latest version..."

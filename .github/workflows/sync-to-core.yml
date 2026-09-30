@@ -6,7 +6,11 @@ on:
       - "core-v*"
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   ci:
@@ -16,10 +20,10 @@ jobs:
   sync:
     name: Sync to Core Fork
     needs: ci
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout source repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -28,21 +32,16 @@ jobs:
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
           VERSION=${TAG_NAME#core-}
-          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Checkout core fork
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: energy-tracker/core
           token: ${{ secrets.CORE_SYNC_TOKEN }}
           path: core-fork
           fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ needs.ci.outputs.python-version }}
 
       - name: Configure git
         working-directory: core-fork
@@ -68,13 +67,18 @@ jobs:
           VERSION: ${{ steps.tag.outputs.VERSION }}
         run: |
           # Check if branch exists remotely
-          if git ls-remote --heads origin energy-tracker-$VERSION | grep -q energy-tracker-$VERSION; then
+          if git ls-remote --heads origin "energy-tracker-$VERSION" | grep -q "energy-tracker-$VERSION"; then
             echo "Branch exists, will update it"
-            git checkout -B energy-tracker-$VERSION origin/dev
+            git checkout -B "energy-tracker-$VERSION" origin/dev
           else
             echo "Creating new branch"
-            git checkout -b energy-tracker-$VERSION origin/dev
+            git checkout -b "energy-tracker-$VERSION" origin/dev
           fi
+
+      - name: Set up Python for Core
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: core-fork/.python-version
 
       - name: Sync component files
         run: |
@@ -165,6 +169,6 @@ jobs:
           VERSION: ${{ steps.tag.outputs.VERSION }}
         run: |
           # Force push to update existing branch (if PR exists) or push new branch
-          git push --force origin energy-tracker-$VERSION
+          git push --force origin "energy-tracker-$VERSION"
           echo "✅ Branch energy-tracker-$VERSION pushed to energy-tracker/core"
           echo "Existing PR will be automatically updated with new commits"

@@ -1,5 +1,17 @@
 # Contributing
 
+## Development checks
+
+CI and `make install` use `requirements-dev.lock` as constraints for the test tools,
+Home Assistant and the API client. CI reads the Python version from the matching
+Home Assistant release. The current test baseline is Home Assistant 2026.1.1 on Python 3.13.
+
+```bash
+make venv PYTHON=python3.13
+make install
+make test
+```
+
 ## Release Process
 
 ### HACS Release
@@ -11,7 +23,8 @@
    git tag v1.2.3
    git push origin v1.2.3
    ```
-4. GitHub Action creates release automatically
+4. GitHub Action validates the manifest version, runs CI, HACS and hassfest checks,
+   then creates the release with automatically generated release notes
 5. HACS detects new release within hours
 
 ### Core Sync
