@@ -21,6 +21,12 @@ The integration does not create entities or retrieve readings from Energy Tracke
 
 Requires **Home Assistant 2026.3.1 or newer** (Python 3.14.2+).
 
+### Upgrading from 1.0.0
+
+Update Home Assistant to 2026.3.1 or newer before installing this release. Existing accounts are migrated automatically; their account references and automation action fields stay the same. You do not need to remove and recreate the integration.
+
+Meter readings must be finite, non-negative, and below `10000000000`. Values are sent with up to six fractional digits; additional digits are truncated. Review automations that send values outside these limits. The **Allow rounding** setting continues to control rounding to the meter's precision in Energy Tracker.
+
 ### Step 1: Install the Integration
 
 #### Option A: Via HACS (Recommended)
