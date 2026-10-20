@@ -52,7 +52,7 @@ def export_to_core(source_root: Path, core_root: Path) -> None:
             source,
             target,
             ignore=shutil.ignore_patterns(
-                "tooling", "translations", "__pycache__", "*.pyc"
+                "brand", "tooling", "translations", "__pycache__", "*.pyc"
             ),
         )
 
