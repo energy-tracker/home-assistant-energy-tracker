@@ -77,7 +77,7 @@ def reading_data(loaded_entry):
 async def open_session(hass, loaded_entry, reading_data, sdk_requests):
     """Open a real SDK session using a mocked HTTP response."""
     sdk_requests.post(
-        "https://public-api.energy-tracker.best-ios-apps.de/v3/devices/standard/device-123/meter-readings",
+        "https://public-api.energy-tracker.app/v3/devices/standard/device-123/meter-readings",
         status=204,
     )
     await hass.services.async_call(
@@ -1173,7 +1173,7 @@ async def test_v3_request_preserves_decimal_precision(
     # Arrange
     hass.states.async_set("sensor.meter", raw)
     sdk_requests.post(
-        "https://public-api.energy-tracker.best-ios-apps.de/v3/devices/standard/device-123/meter-readings",
+        "https://public-api.energy-tracker.app/v3/devices/standard/device-123/meter-readings",
         status=204,
     )
     data = {**reading_data, "allow_rounding": allow_rounding}
@@ -1267,7 +1267,7 @@ async def test_v3_http_errors_are_translated_without_retries(
     """Exercise SDK HTTP status handling through the HA action boundary."""
     # Arrange
     sdk_requests.post(
-        "https://public-api.energy-tracker.best-ios-apps.de/v3/devices/standard/device-123/meter-readings",
+        "https://public-api.energy-tracker.app/v3/devices/standard/device-123/meter-readings",
         status=status,
         json={"message": ["Request rejected"]},
         headers={"Retry-After": "10"},
